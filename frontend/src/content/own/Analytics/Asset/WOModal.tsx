@@ -5,9 +5,8 @@ import {
   DialogTitle,
   Typography
 } from '@mui/material';
-import CustomDataGrid, {
-  CustomDatagridColumn
-} from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
+import type { CustomDatagridColumn } from '../../components/CustomDatagrid';
 import {
   GridRenderCellParams,
   GridToolbar,
@@ -229,7 +228,7 @@ export default function WOModal({
         }}
       >
         <Box sx={{ width: '95%' }}>
-          <CustomDataGrid
+          <CommunityDataGrid
             columns={getColumns()}
             notClickable
             rows={[]}
