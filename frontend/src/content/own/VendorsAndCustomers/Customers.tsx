@@ -14,7 +14,7 @@ import * as Yup from 'yup';
 import { IField } from '../type';
 import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridEnrichedColDef,
   GridRenderCellParams,
@@ -49,8 +49,7 @@ import Currency from '../../../models/owns/currency';
 import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import { onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 
 interface PropsType {
   values?: any;
@@ -359,8 +358,9 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
         params.value?.name
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'customer');
+  // Pro-only grid api removed for community DataGrid
+  // const apiRef = useGridApiRef();
+  // useGridStatePersist(apiRef, columns, 'customer');
   const RenderCustomersAddModal = () => (
     <Dialog fullWidth maxWidth="md" open={openModal} onClose={handleCloseModal}>
       <DialogTitle
@@ -406,8 +406,7 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
         width: '95%'
       }}
     >
-      <CustomDataGrid
-        apiRef={apiRef}
+      <CommunityDataGrid
         pageSize={criteria.pageSize}
         page={criteria.pageNum}
         rows={customers.content}

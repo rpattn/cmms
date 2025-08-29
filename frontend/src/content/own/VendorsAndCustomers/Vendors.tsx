@@ -24,7 +24,7 @@ import { IField } from '../type';
 import ConfirmDialog from '../components/ConfirmDialog';
 import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import { CustomSnackBarContext } from '../../../contexts/CustomSnackBarContext';
 import {
   GridEnrichedColDef,
@@ -46,8 +46,7 @@ import NoRowsMessageWrapper from '../components/NoRowsMessageWrapper';
 import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import { onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed useGridApiRef and Pro-based state persistence for community grid
 import { useBrand } from '../../../hooks/useBrand';
 
 interface PropsType {
@@ -127,6 +126,10 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
       handleOpenModal(foundVendor);
     }
   };
+  
+  // Community grid: remove Pro apiRef and state persistence
+  // const apiRef = useGridApiRef();
+  // useGridStatePersist(apiRef, columns, 'vendor');
   const handleCloseDetails = () => {
     window.history.replaceState(
       null,
@@ -304,8 +307,7 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
       width: 150
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'vendor');
+  // Pro-only grid api/state removed in community build
 
   // const searchFilterProperties = ['name', 'companyName', 'vendorType', 'email'];
   const fieldsToRender = [
@@ -389,8 +391,7 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
         width: '95%'
       }}
     >
-      <CustomDataGrid
-        apiRef={apiRef}
+      <CommunityDataGrid
         pageSize={criteria.pageSize}
         page={criteria.pageNum}
         rows={vendors.content}
