@@ -1,7 +1,4 @@
 import * as jose from 'jose';
-import { Buffer } from 'buffer';
-
-window.Buffer = Buffer;
 /* eslint-disable no-bitwise */
 export const JWT_EXPIRES_IN = 3600 * 24 * 14;
 
