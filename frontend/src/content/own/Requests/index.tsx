@@ -27,7 +27,7 @@ import {
 import { useDispatch, useSelector } from '../../../store';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridRenderCellParams,
   GridToolbar,
@@ -56,8 +56,7 @@ import {
   SearchCriteria,
   SortDirection
 } from '../../../models/owns/page';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 import _ from 'lodash';
 import FilterAltTwoToneIcon from '@mui/icons-material/FilterAltTwoTone';
 import EnumFilter from '../WorkOrders/Filters/EnumFilter';
@@ -105,10 +104,33 @@ function Files() {
       enumName: 'STATUS'
     }
   ];
+  const REQUEST_GRID_STATE_KEY = 'requestCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadRequestGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(REQUEST_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveRequestGridState = (partial: GridSavedState) => {
+    const prev = loadRequestGridState();
+    localStorage.setItem(
+      REQUEST_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedRequestState = loadRequestGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: defaultFilterFields,
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedRequestState.pageSize ?? 10,
+    pageNum: savedRequestState.page ?? 0,
     direction: 'DESC'
   });
   const { showSnackBar } = useContext(CustomSnackBarContext);
@@ -266,8 +288,27 @@ function Files() {
         getFormattedDate(params.value)
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'request');
+  // Pro-only grid api/state removed in community build
+  // const apiRef = useGridApiRef();
+  // useGridStatePersist(apiRef, columns, 'request');
+  const requestFieldMapping: Record<string, string> = {
+    customId: 'customId',
+    title: 'title',
+    description: 'description',
+    priority: 'priority',
+    createdAt: 'createdAt'
+  };
+  // Apply saved sort model to criteria on mount
+  useEffect(() => {
+    const sm = savedRequestState.sortModel?.[0];
+    if (sm && requestFieldMapping[sm.field]) {
+      setCriteria((prev) => ({
+        ...prev,
+        sortField: requestFieldMapping[sm.field],
+        direction: (sm.sort?.toUpperCase() || 'ASC') as SortDirection
+      }));
+    }
+  }, []);
   const defaultFields: Array<IField> = [...getWOBaseFields(t)];
   const defaultShape = {
     title: Yup.string().required(t('required_request_name'))
@@ -528,8 +569,7 @@ function Files() {
               </Stack>
               <Divider sx={{ mt: 1 }} />
               <Box sx={{ width: '95%' }}>
-                <CustomDataGrid
-                  apiRef={apiRef}
+                <CommunityDataGrid
                   columns={columns}
                   loading={loadingGet}
                   pageSize={criteria.pageSize}
@@ -538,8 +578,14 @@ function Files() {
                   rowCount={requests.totalElements}
                   pagination
                   paginationMode="server"
-                  onPageSizeChange={onPageSizeChange}
-                  onPageChange={onPageChange}
+                  onPageSizeChange={(size) => {
+                    saveRequestGridState({ pageSize: size });
+                    onPageSizeChange(size);
+                  }}
+                  onPageChange={(page) => {
+                    saveRequestGridState({ page });
+                    onPageChange(page);
+                  }}
                   rowsPerPageOptions={[10, 20, 50]}
                   onRowClick={({ id }) => handleOpenDetails(Number(id))}
                   components={{
@@ -551,6 +597,7 @@ function Files() {
                     )
                   }}
                   onSortModelChange={(model) => {
+                    saveRequestGridState({ sortModel: model });
                     if (model.length === 0) {
                       setCriteria({
                         ...criteria,
@@ -560,17 +607,8 @@ function Files() {
                       return;
                     }
 
-                    const fieldMapping = {
-                      customId: 'customId',
-                      title: 'title',
-                      description: 'description',
-                      priority: 'priority',
-                      // status: 'status',
-                      createdAt: 'createdAt'
-                    };
-
                     const field = model[0].field;
-                    const mappedField = fieldMapping[field];
+                    const mappedField = requestFieldMapping[field];
 
                     if (!mappedField) return;
 
@@ -584,9 +622,16 @@ function Files() {
                   sortingMode={'server'}
                   initialState={{
                     columns: {
-                      columnVisibilityModel: {}
+                      columnVisibilityModel:
+                        savedRequestState.columnVisibilityModel || {}
+                    },
+                    sorting: {
+                      sortModel: savedRequestState.sortModel || []
                     }
                   }}
+                  onColumnVisibilityModelChange={(model) =>
+                    saveRequestGridState({ columnVisibilityModel: model })
+                  }
                 />
               </Box>
             </Card>

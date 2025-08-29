@@ -15,7 +15,7 @@ import { TitleContext } from '../../../contexts/TitleContext';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridRenderCellParams,
@@ -46,10 +46,9 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { CustomSnackBarContext } from '../../../contexts/CustomSnackBarContext';
 import NoRowsMessageWrapper from '../components/NoRowsMessageWrapper';
 import { useParams } from 'react-router-dom';
-import { SearchCriteria } from '../../../models/owns/page';
+import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import { isNumeric } from '../../../utils/validators';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 
 function Files() {
   const { t }: { t: any } = useTranslation();
@@ -60,10 +59,33 @@ function Files() {
   const { showSnackBar } = useContext(CustomSnackBarContext);
   const { files, loadingGet, singleFile } = useSelector((state) => state.files);
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const FILES_GRID_STATE_KEY = 'filesCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadFilesGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(FILES_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveFilesGridState = (partial: GridSavedState) => {
+    const prev = loadFilesGridState();
+    localStorage.setItem(
+      FILES_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedFilesState = loadFilesGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedFilesState.pageSize ?? 10,
+    pageNum: savedFilesState.page ?? 0,
     direction: 'DESC'
   });
   const { fileId } = useParams();
@@ -111,6 +133,22 @@ function Files() {
   useEffect(() => {
     if (hasViewPermission(PermissionEntity.FILES)) dispatch(getFiles(criteria));
   }, [criteria]);
+  const filesFieldMapping: Record<string, string> = {
+    name: 'name',
+    createdAt: 'createdAt',
+    size: 'size',
+    createdBy: 'createdBy.firstName'
+  };
+  useEffect(() => {
+    const sm = savedFilesState.sortModel?.[0];
+    if (sm && filesFieldMapping[sm.field]) {
+      setCriteria((prev) => ({
+        ...prev,
+        sortField: filesFieldMapping[sm.field],
+        direction: (sm.sort?.toUpperCase() || 'ASC') as SortDirection
+      }));
+    }
+  }, []);
 
   //see changes in ui on edit
   useEffect(() => {
@@ -219,8 +257,7 @@ function Files() {
       }
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'file');
+  // Pro-only grid api/state removed in community build
   const shape = {
     files: Yup.array().required(t('required_files'))
   };
@@ -349,8 +386,7 @@ function Files() {
                 }}
               >
                 <Box sx={{ width: '95%' }}>
-                  <CustomDataGrid
-                    apiRef={apiRef}
+                  <CommunityDataGrid
                     columns={columns}
                     pageSize={criteria.pageSize}
                     page={criteria.pageNum}
@@ -358,8 +394,14 @@ function Files() {
                     rowCount={files.totalElements}
                     pagination
                     paginationMode="server"
-                    onPageSizeChange={onPageSizeChange}
-                    onPageChange={onPageChange}
+                    onPageSizeChange={(size) => {
+                      saveFilesGridState({ pageSize: size });
+                      onPageSizeChange(size);
+                    }}
+                    onPageChange={(page) => {
+                      saveFilesGridState({ page });
+                      onPageChange(page);
+                    }}
                     rowsPerPageOptions={[10, 20, 50]}
                     loading={loadingGet}
                     components={{
@@ -375,9 +417,16 @@ function Files() {
                     }
                     initialState={{
                       columns: {
-                        columnVisibilityModel: {}
+                        columnVisibilityModel:
+                          savedFilesState.columnVisibilityModel || {}
+                      },
+                      sorting: {
+                        sortModel: savedFilesState.sortModel || []
                       }
                     }}
+                    onColumnVisibilityModelChange={(model) =>
+                      saveFilesGridState({ columnVisibilityModel: model })
+                    }
                   />
                 </Box>
               </Card>

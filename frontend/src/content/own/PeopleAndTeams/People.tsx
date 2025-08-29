@@ -10,7 +10,7 @@ import {
   useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridEnrichedColDef,
@@ -49,8 +49,7 @@ import { onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
 import CancelIcon from '@mui/icons-material/Cancel';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 import InviteUserDialog from './components/InviteUserDialog';
 import { isEmailVerificationEnabled } from '../../../config';
 
@@ -69,10 +68,33 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
   const { hasEditPermission, user } = useAuth();
   const { users, loadingGet, singleUser } = useSelector((state) => state.users);
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const PEOPLE_GRID_STATE_KEY = 'peopleCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadPeopleGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(PEOPLE_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const savePeopleGridState = (partial: GridSavedState) => {
+    const prev = loadPeopleGridState();
+    localStorage.setItem(
+      PEOPLE_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedPeopleState = loadPeopleGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedPeopleState.pageSize ?? 10,
+    pageNum: savedPeopleState.page ?? 0,
     direction: 'DESC'
   });
   const dispatch = useDispatch();
@@ -355,11 +377,26 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
       }
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'users');
+  const peopleFieldMapping: Record<string, string> = {
+    firstName: 'firstName',
+    lastName: 'lastName',
+    email: 'email',
+    rate: 'rate',
+    role: 'role.name'
+  };
+  React.useEffect(() => {
+    const sm = savedPeopleState.sortModel?.[0];
+    if (sm && peopleFieldMapping[sm.field]) {
+      setCriteria((prev) => ({
+        ...prev,
+        sortField: peopleFieldMapping[sm.field],
+        direction: (sm.sort?.toUpperCase() || 'ASC') as SortDirection
+      }));
+    }
+  }, []);
+
   const RenderPeopleList = () => (
-    <CustomDataGrid
-      apiRef={apiRef}
+    <CommunityDataGrid
       pageSize={criteria.pageSize}
       page={criteria.pageNum}
       rows={users.content}
@@ -367,11 +404,18 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
       pagination
       paginationMode="server"
       sortingMode="server"
-      onPageSizeChange={onPageSizeChange}
-      onPageChange={onPageChange}
+      onPageSizeChange={(size) => {
+        savePeopleGridState({ pageSize: size });
+        onPageSizeChange(size);
+      }}
+      onPageChange={(page) => {
+        savePeopleGridState({ page });
+        onPageChange(page);
+      }}
       rowsPerPageOptions={[10, 20, 50]}
       loading={loadingGet}
       onSortModelChange={(model) => {
+        savePeopleGridState({ sortModel: model });
         if (model.length === 0) {
           setCriteria({
             ...criteria,
@@ -381,16 +425,8 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
           return;
         }
 
-        const fieldMapping = {
-          firstName: 'firstName',
-          lastName: 'lastName',
-          email: 'email',
-          rate: 'rate',
-          role: 'role.name'
-        };
-
         const field = model[0].field;
-        const mappedField = fieldMapping[field];
+        const mappedField = peopleFieldMapping[field];
 
         if (!mappedField) return;
 
@@ -406,9 +442,15 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
       }}
       initialState={{
         columns: {
-          columnVisibilityModel: {}
+          columnVisibilityModel: savedPeopleState.columnVisibilityModel || {}
+        },
+        sorting: {
+          sortModel: savedPeopleState.sortModel || []
         }
       }}
+      onColumnVisibilityModelChange={(model) =>
+        savePeopleGridState({ columnVisibilityModel: model })
+      }
       onRowClick={(params) => {
         // setCurrentUser(users.find((user) => user.id === params.id));
         handleOpenDetails(Number(params.id));
