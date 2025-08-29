@@ -32,17 +32,17 @@ import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid, {
-  CustomDatagridColumn
-} from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
+import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
   GridEventListener,
   GridRenderCellParams,
-  GridRow,
   GridToolbar,
   GridValueGetterParams
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExpandLess from '@mui/icons-material/ExpandLess';
 import {
   AssetDTO,
   AssetMiniDTO,
@@ -52,9 +52,7 @@ import {
 import Form from '../components/form';
 import * as Yup from 'yup';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { DataGridProProps, useGridApiRef } from '@mui/x-data-grid-pro';
 import { formatAssetValues } from '../../../utils/formatters';
-import { GroupingCellWithLazyLoading } from './GroupingCellWithLazyLoading';
 import { UserMiniDTO } from '../../../models/user';
 import UserAvatars from '../components/UserAvatars';
 import { enumerate } from '../../../utils/displayers';
@@ -84,7 +82,7 @@ import { getRandomColor, onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
 import File from '../../../models/owns/file';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef/state persistence for community grid
 import AssetStatusTag from './components/AssetStatusTag';
 
 function Assets() {
@@ -107,7 +105,7 @@ function Assets() {
     (state) => state.assets
   );
   const { loadingExport } = useSelector((state) => state.exports);
-  const apiRef = useGridApiRef();
+  // Pro-only api removed in community build
   const { getFormattedDate } = useContext(CompanySettingsContext);
   const { showSnackBar } = useContext(CustomSnackBarContext);
   const { locations } = useSelector((state) => state.locations);
@@ -118,7 +116,31 @@ function Assets() {
   const openMenu = Boolean(anchorEl);
   type ViewType = 'hierarchy' | 'list';
   const theme = useTheme();
-  const [view, setView] = useState<ViewType>('hierarchy');
+  const ASSET_GRID_STATE_KEY = 'assetCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    pageSize?: number;
+    page?: number;
+    expandedIds?: number[];
+    view?: ViewType;
+  };
+  const loadAssetGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(ASSET_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveAssetGridState = (partial: GridSavedState) => {
+    const prev = loadAssetGridState();
+    localStorage.setItem(
+      ASSET_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedAssetState = loadAssetGridState();
+  const [view, setView] = useState<ViewType>(savedAssetState.view || 'hierarchy');
   const [pageable, setPageable] = useState<Pageable>({
     page: 0,
     size: 1000
@@ -135,9 +157,15 @@ function Assets() {
     pageNum: 0,
     direction: 'DESC'
   };
-  const [criteria, setCriteria] = useState<SearchCriteria>(initialCriteria);
+  const [criteria, setCriteria] = useState<SearchCriteria>({
+    ...initialCriteria,
+    pageSize: savedAssetState.pageSize ?? initialCriteria.pageSize,
+    pageNum: savedAssetState.page ?? initialCriteria.pageNum
+  });
   const onQueryChange = (event) => {
-    setView(event.target.value ? 'list' : 'hierarchy');
+    const nextView: ViewType = event.target.value ? 'list' : 'hierarchy';
+    setView(nextView);
+    saveAssetGridState({ view: nextView });
     onSearchQueryChange<AssetDTO>(event, criteria, setCriteria, [
       'name',
       'description',
@@ -381,7 +409,7 @@ function Assets() {
         getFormattedDate(params.value)
     }
   ];
-  useGridStatePersist(apiRef, columns, 'asset');
+  // useGridStatePersist removed (Pro-only). Consider model-based persistence if needed.
 
   // Mapping for column fields to API field names for sorting
   const fieldMapping: Record<string, string> = {
@@ -587,65 +615,9 @@ function Assets() {
   const handleReset = (callApi: boolean) => {
     dispatch(resetAssetsHierarchy(callApi));
   };
-  useEffect(() => {
-    if (apiRef.current.getRow) {
-      const handleRowExpansionChange: GridEventListener<
-        'rowExpansionChange'
-      > = async (node) => {
-        const row = apiRef.current.getRow(node.id) as AssetRow | null;
-        if (!node.childrenExpanded || !row || row.childrenFetched) {
-          return;
-        }
-        apiRef.current.updateRows([
-          {
-            id: t('loading_assets', { name: row.name, id: node.id }),
-            hierarchy: [...row.hierarchy, '']
-          }
-        ]);
-        if (
-          !deployedAssets.find((deployedAsset) => deployedAsset.id === row.id)
-        )
-          setDeployedAssets(
-            deployedAssets.concat({
-              id: row.id,
-              hierarchy: row.hierarchy
-            })
-          );
-        dispatch(getAssetChildren(row.id, row.hierarchy, pageable));
-      };
-      /**
-       * By default, the grid does not toggle the expansion of rows with 0 children
-       * We need to override the `cellKeyDown` event listener to force the expansion if there are children on the server
-       */
-      const handleCellKeyDown: GridEventListener<'cellKeyDown'> = (
-        params,
-        event
-      ) => {
-        const cellParams = apiRef.current.getCellParams(
-          params.id,
-          params.field
-        );
-        if (cellParams.colDef.type === 'treeDataGroup' && event.key === ' ') {
-          event.stopPropagation();
-          event.preventDefault();
-          event.defaultMuiPrevented = true;
-
-          apiRef.current.setRowChildrenExpansion(
-            params.id,
-            !params.rowNode.childrenExpanded
-          );
-        }
-      };
-
-      apiRef.current.subscribeEvent(
-        'rowExpansionChange',
-        handleRowExpansionChange
-      );
-      apiRef.current.subscribeEvent('cellKeyDown', handleCellKeyDown, {
-        isFirst: true
-      });
-    }
-  }, [apiRef]);
+useEffect(() => {
+    // No-op: Community grid handles expand/collapse via local state
+  }, []);
 
   const renderAssetAddModal = () => (
     <Dialog
@@ -728,30 +700,22 @@ function Assets() {
     </Dialog>
   );
 
-  const groupingColDef: DataGridProProps['groupingColDef'] = {
-    headerName: t('hierarchy'),
-    renderCell: (params) => <GroupingCellWithLazyLoading {...params} />
-  };
-  const CustomRow = (props: React.ComponentProps<typeof GridRow>) => {
-    const rowNode = apiRef.current.getRowNode(props.rowId);
-    const theme = useTheme();
-
-    return (
-      <GridRow
-        {...props}
-        style={
-          (rowNode?.depth ?? 0) > 0
-            ? {
-                backgroundColor:
-                  rowNode.depth % 2 === 0
-                    ? theme.colors.primary.light
-                    : theme.colors.primary.main,
-                color: 'white'
-              }
-            : undefined
-        }
-      />
-    );
+  // Hierarchy expand/collapse state for community grid
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set<number>(savedAssetState.expandedIds || []));
+  const isVisible = (row: AssetRow) =>
+    (row.hierarchy || []).slice(0, -1).every((id) => expandedIds.has(id));
+  const visibleHierarchyRows = assetsHierarchy.filter(isVisible);
+  const toggleExpanded = (row: AssetRow) => {
+    setExpandedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(row.id)) next.delete(row.id);
+      else next.add(row.id);
+      saveAssetGridState({ expandedIds: Array.from(next) });
+      return next;
+    });
+    if (!row.childrenFetched && row.hasChildren) {
+      dispatch(getAssetChildren(row.id, row.hierarchy, pageable));
+    }
   };
   if (hasViewPermission(PermissionEntity.ASSETS))
     return (
@@ -811,57 +775,91 @@ function Assets() {
               }}
             >
               <Box sx={{ width: '95%' }}>
-                <CustomDataGrid
-                  pro
-                  treeData={view === 'hierarchy'}
-                  columns={columns}
-                  rows={view === 'hierarchy' ? assetsHierarchy : assets.content}
-                  apiRef={apiRef}
-                  getRowHeight={() => 'auto'}
-                  getTreeDataPath={(row) =>
+                <CommunityDataGrid
+                  columns={
                     view === 'hierarchy'
-                      ? row.hierarchy.map((id) => id.toString())
-                      : [row.id.toString()]
+                      ? columns.map((c) =>
+                          c.field === 'name'
+                            ? {
+                                ...c,
+                                renderCell: (params: GridRenderCellParams<string, AssetRow>) => (
+                                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                    {params.row.hasChildren && (
+                                      <IconButton
+                                        size="small"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toggleExpanded(params.row as AssetRow);
+                                        }}
+                                        sx={{ mr: 1 }}
+                                      >
+                                        {expandedIds.has((params.row as AssetRow).id) ? (
+                                          <ExpandLess fontSize="inherit" />
+                                        ) : (
+                                          <ExpandMore fontSize="inherit" />
+                                        )}
+                                      </IconButton>
+                                    )}
+                                    <Box sx={{ ml: ((params.row as AssetRow).hierarchy?.length || 1) - 1 }}>
+                                      <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
+                                    </Box>
+                                  </Box>
+                                )
+                              }
+                            : c
+                        )
+                      : columns
                   }
+                  rows={
+                    view === 'hierarchy'
+                      ? (function buildVisibleRows() {
+                          const order: Map<number, number> = new globalThis.Map();
+                          assetsHierarchy.forEach((row, idx) => order.set(row.id, idx));
+                          const children: Map<number, AssetRow[]> = new globalThis.Map();
+                          const roots: AssetRow[] = [];
+                          for (const row of assetsHierarchy as AssetRow[]) {
+                            const h = row.hierarchy || [];
+                            const parentId = h.length > 1 ? h[h.length - 2] : undefined;
+                            if (parentId === undefined) {
+                              roots.push(row);
+                            } else {
+                              const arr = children.get(parentId) || [];
+                              arr.push(row);
+                              children.set(parentId, arr);
+                            }
+                          }
+                          roots.sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+                          for (const [pid, arr] of children) {
+                            arr.sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+                            children.set(pid, arr);
+                          }
+                          const out: AssetRow[] = [];
+                          const visit = (row: AssetRow) => {
+                            out.push(row);
+                            if (expandedIds.has(row.id)) {
+                              const arr = children.get(row.id) || [];
+                              for (const ch of arr) visit(ch);
+                            }
+                          };
+                          for (const r of roots) visit(r);
+                          return out;
+                        })()
+                      : assets.content
+                  }
+                  getRowId={(row) => row.id}
                   disableColumnFilter
                   loading={loadingGet}
-                  groupingColDef={
-                    view === 'hierarchy' ? groupingColDef : undefined
-                  }
                   paginationMode={view === 'hierarchy' ? undefined : 'server'}
-                  sortingMode={view === 'hierarchy' ? 'client' : undefined}
-                  onSortModelChange={(model) => {
-                    if (view !== 'hierarchy') return;
-
-                    if (model.length === 0) {
-                      setCriteria({
-                        ...criteria,
-                        sortField: undefined,
-                        direction: undefined
-                      });
-                      return;
-                    }
-
-                    const field = model[0].field;
-                    const mappedField = fieldMapping[field];
-
-                    // Only proceed if we have a mapping for this field
-                    if (!mappedField) return;
-
-                    setPageable((prevState) => ({
-                      ...prevState,
-                      sort: model.length
-                        ? [`${mappedField},${model[0].sort}` as Sort]
-                        : []
-                    }));
+                  onPageSizeChange={(size) => {
+                    saveAssetGridState({ pageSize: size });
+                    onPageSizeChange(size);
                   }}
-                  onPageSizeChange={onPageSizeChange}
-                  onPageChange={onPageChange}
-                  rowsPerPageOptions={
-                    view === 'list' ? [10, 20, 50] : undefined
-                  }
+                  onPageChange={(page) => {
+                    saveAssetGridState({ page });
+                    onPageChange(page);
+                  }}
+                  rowsPerPageOptions={[10, 20, 50]}
                   components={{
-                    Row: CustomRow,
                     NoRowsOverlay: () => (
                       <NoRowsMessageWrapper
                         message={t('noRows.asset.message')}
@@ -874,9 +872,13 @@ function Assets() {
                   }}
                   initialState={{
                     columns: {
-                      columnVisibilityModel: {}
+                      columnVisibilityModel:
+                        savedAssetState.columnVisibilityModel || {}
                     }
                   }}
+                  onColumnVisibilityModelChange={(model) =>
+                    saveAssetGridState({ columnVisibilityModel: model })
+                  }
                 />
               </Box>
             </Card>

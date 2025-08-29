@@ -18,6 +18,8 @@ import {
   Typography,
   useTheme
 } from '@mui/material';
+import ExpandMore from '@mui/icons-material/ExpandMore';
+import ExpandLess from '@mui/icons-material/ExpandLess';
 import { useTranslation } from 'react-i18next';
 import { IField } from '../type';
 import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
@@ -38,12 +40,13 @@ import { useDispatch, useSelector } from '../../../store';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridEventListener,
   GridRenderCellParams,
   GridRow,
+  DataGridProps,
   GridRowParams,
   GridToolbar,
   GridValueGetterParams
@@ -58,9 +61,8 @@ import Map from '../components/Map';
 import { formatSelect, formatSelectMultiple } from '../../../utils/formatters';
 import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
 import { CompanySettingsContext } from '../../../contexts/CompanySettingsContext';
-import { DataGridProProps, useGridApiRef } from '@mui/x-data-grid-pro';
-import { GroupingCellWithLazyLoading } from '../Assets/GroupingCellWithLazyLoading';
-import { AssetRow } from '../../../models/owns/asset';
+// removed Pro grid apiRef and grouping cell
+import type { LocationRow } from '../../../models/owns/location';
 import useAuth from '../../../hooks/useAuth';
 import { PermissionEntity } from '../../../models/owns/role';
 import PermissionErrorMessage from '../components/PermissionErrorMessage';
@@ -70,7 +72,7 @@ import { getLocationUrl } from '../../../utils/urlPaths';
 import { exportEntity } from '../../../slices/exports';
 import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro state persistence; using model-based persistence below
 import { Pageable, Sort } from '../../../models/owns/page';
 import { googleMapsConfig } from '../../../config';
 
@@ -96,13 +98,36 @@ function Locations() {
   ]);
 
   const { loadingExport } = useSelector((state) => state.exports);
-  const apiRef = useGridApiRef();
+  // persistence helpers
+  const LOCATIONS_GRID_STATE_KEY = 'locationsCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    expandedIds?: number[];
+    tab?: string;
+  };
+  const loadLocationsGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(LOCATIONS_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveLocationsGridState = (partial: GridSavedState) => {
+    const prev = loadLocationsGridState();
+    localStorage.setItem(
+      LOCATIONS_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedLocationsState = loadLocationsGridState();
   const tabs = [
     { value: 'list', label: t('list_view') },
     ...(apiKey ? [{ value: 'map', label: t('map_view') }] : [])
   ];
   const handleTabsChange = (_event: ChangeEvent<{}>, value: string): void => {
     setCurrentTab(value);
+    saveLocationsGridState({ tab: value });
   };
   const [openAddModal, setOpenAddModal] = useState<boolean>(false);
   const [openUpdateModal, setOpenUpdateModal] = useState<boolean>(false);
@@ -119,6 +144,16 @@ function Locations() {
     hasFeature
   } = useAuth();
   const [currentLocation, setCurrentLocation] = useState<Location>();
+  const [expandedIds, setExpandedIds] = useState<Set<number>>(
+    new Set<number>(savedLocationsState.expandedIds || [])
+  );
+  // restore selected tab
+  useEffect(() => {
+    if (savedLocationsState.tab && tabs.find((t) => t.value === savedLocationsState.tab)) {
+      setCurrentTab(savedLocationsState.tab);
+    }
+    // no dependencies: only run on mount
+  }, []);
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const openMenu = Boolean(anchorEl);
   const navigate = useNavigate();
@@ -136,6 +171,7 @@ function Locations() {
   const handleOpenUpdate = () => {
     setOpenUpdateModal(true);
   };
+  // Remove Pro apiRef-based effects (treeData events)
   const onOpenDeleteDialog = () => {
     setOpenDelete(true);
   };
@@ -192,67 +228,7 @@ function Locations() {
     }
   }, [pageable]);
 
-  useEffect(() => {
-    if (apiRef.current.getRow) {
-      const handleRowExpansionChange: GridEventListener<
-        'rowExpansionChange'
-      > = async (node) => {
-        const row = apiRef.current.getRow(node.id) as AssetRow | null;
-        if (!node.childrenExpanded || !row || row.childrenFetched) {
-          return;
-        }
-        apiRef.current.updateRows([
-          {
-            id: `Loading Locations under ${row.name} #${node.id}`,
-            hierarchy: [...row.hierarchy, '']
-          }
-        ]);
-        if (
-          !deployedLocations.find(
-            (deployedLocation) => deployedLocation.id === row.id
-          )
-        )
-          setDeployedLocations(
-            deployedLocations.concat({
-              id: row.id,
-              hierarchy: row.hierarchy
-            })
-          );
-        dispatch(getLocationChildren(row.id, row.hierarchy, pageable));
-      };
-      /**
-       * By default, the grid does not toggle the expansion of rows with 0 children
-       * We need to override the `cellKeyDown` event listener to force the expansion if there are children on the server
-       */
-      const handleCellKeyDown: GridEventListener<'cellKeyDown'> = (
-        params,
-        event
-      ) => {
-        const cellParams = apiRef.current.getCellParams(
-          params.id,
-          params.field
-        );
-        if (cellParams.colDef.type === 'treeDataGroup' && event.key === ' ') {
-          event.stopPropagation();
-          event.preventDefault();
-          event.defaultMuiPrevented = true;
-
-          apiRef.current.setRowChildrenExpansion(
-            params.id,
-            !params.rowNode.childrenExpanded
-          );
-        }
-      };
-
-      apiRef.current.subscribeEvent(
-        'rowExpansionChange',
-        handleRowExpansionChange
-      );
-      apiRef.current.subscribeEvent('cellKeyDown', handleCellKeyDown, {
-        isFirst: true
-      });
-    }
-  }, [apiRef]);
+  // Removed Pro apiRef event subscriptions (handled via local expand/collapse state)
 
   useEffect(() => {
     if (locations?.length && locationId && isNumeric(locationId)) {
@@ -337,7 +313,6 @@ function Locations() {
       }
     }
   ];
-  useGridStatePersist(apiRef, columns, 'location');
   const fields: Array<IField> = [
     {
       name: 'name',
@@ -510,32 +485,6 @@ function Locations() {
       </DialogContent>
     </Dialog>
   );
-  const groupingColDef: DataGridProProps['groupingColDef'] = {
-    headerName: t('hierarchy'),
-    renderCell: (params) => <GroupingCellWithLazyLoading {...params} />,
-    flex: 0.5
-  };
-  const CustomRow = (props: React.ComponentProps<typeof GridRow>) => {
-    const rowNode = apiRef.current.getRowNode(props.rowId);
-    const theme = useTheme();
-
-    return (
-      <GridRow
-        {...props}
-        style={
-          (rowNode?.depth ?? 0) > 0
-            ? {
-                backgroundColor:
-                  rowNode.depth % 2 === 0
-                    ? theme.colors.primary.light
-                    : theme.colors.primary.main,
-                color: 'white'
-              }
-            : undefined
-        }
-      />
-    );
-  };
   const renderMenu = () => (
     <Menu
       id="basic-menu"
@@ -748,19 +697,88 @@ function Locations() {
                 }}
               >
                 <Box sx={{ width: '95%' }}>
-                  <CustomDataGrid
-                    pro
-                    treeData
-                    columns={columns}
-                    rows={locationsHierarchy}
-                    loading={loadingGet}
-                    apiRef={apiRef}
-                    getTreeDataPath={(row) =>
-                      row.hierarchy.map((id) => id.toString())
+                  <CommunityDataGrid
+                    columns={
+                      columns.map((c) =>
+                        c.field === 'name'
+                          ? {
+                              ...c,
+                              renderCell: (params: GridRenderCellParams<string, LocationRow>) => (
+                                <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                  <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      const row = params.row as LocationRow;
+                                      setExpandedIds((prev) => {
+                                        const next = new Set(prev);
+                                        if (next.has(row.id)) next.delete(row.id);
+                                        else next.add(row.id);
+                                        saveLocationsGridState({ expandedIds: Array.from(next) });
+                                        return next;
+                                      });
+                                      // lazy-load children
+                                      const rowL = params.row as LocationRow;
+                                      if (!(rowL as any).childrenFetched) {
+                                        dispatch(
+                                          getLocationChildren(rowL.id, rowL.hierarchy, pageable)
+                                        );
+                                      }
+                                    }}
+                                    sx={{ mr: 1 }}
+                                  >
+                                    {expandedIds.has((params.row as LocationRow).id) ? (
+                                      <ExpandLess fontSize="inherit" />
+                                    ) : (
+                                      <ExpandMore fontSize="inherit" />
+                                    )}
+                                  </IconButton>
+                                  <Box sx={{ ml: ((params.row as LocationRow).hierarchy?.length || 1) - 1 }}>
+                                    <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
+                                  </Box>
+                                </Box>
+                              )
+                            }
+                          : c
+                      )
                     }
-                    groupingColDef={groupingColDef}
+                    rows={(function buildVisibleRows() {
+                      const order: Map<number, number> = new globalThis.Map();
+                      locationsHierarchy.forEach((row, idx) => order.set(row.id, idx));
+                      const children: Map<number, LocationRow[]> = new globalThis.Map();
+                      const roots: LocationRow[] = [];
+                      for (const row of locationsHierarchy as LocationRow[]) {
+                        const h = row.hierarchy || [];
+                        const parentId = h.length > 1 ? h[h.length - 2] : undefined;
+                        if (parentId === undefined) {
+                          roots.push(row);
+                        } else {
+                          const arr = children.get(parentId) || [];
+                          arr.push(row);
+                          children.set(parentId, arr);
+                        }
+                      }
+                      roots.sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+                      for (const [pid, arr] of children) {
+                        arr.sort((a, b) => (order.get(a.id)! - order.get(b.id)!));
+                        children.set(pid, arr);
+                      }
+                      const out: LocationRow[] = [];
+                      const visit = (row: LocationRow) => {
+                        out.push(row);
+                        if (expandedIds.has(row.id)) {
+                          const arr = children.get(row.id) || [];
+                          for (const ch of arr) visit(ch);
+                        }
+                      };
+                      for (const r of roots) visit(r);
+                      return out;
+                    })()}
+                    getRowId={(row) => row.id}
+                    loading={loadingGet}
+                    hideFooterPagination
+                    hideFooterSelectedRowCount
                     components={{
-                      Row: CustomRow,
                       NoRowsOverlay: () => (
                         <NoRowsMessageWrapper
                           message={t('noRows.location.message')}
@@ -773,10 +791,14 @@ function Locations() {
                     }
                     initialState={{
                       columns: {
-                        columnVisibilityModel: {}
+                        columnVisibilityModel:
+                          savedLocationsState.columnVisibilityModel || {}
                       }
                     }}
-                    sortingMode="client"
+                    onColumnVisibilityModelChange={(model) =>
+                      saveLocationsGridState({ columnVisibilityModel: model })
+                    }
+                    sortingMode={undefined}
                     onSortModelChange={(model, details) => {
                       const mapper: Record<string, string> = {
                         name: 'name',
