@@ -57,7 +57,7 @@ import * as Yup from 'yup';
 import { isNumeric } from '../../../utils/validators';
 import LocationDetails from './LocationDetails';
 import { useNavigate, useParams } from 'react-router-dom';
-import Map from '../components/Map';
+import BasicMap from '../components/BasicMap';
 import { formatSelect, formatSelectMultiple } from '../../../utils/formatters';
 import { CustomSnackBarContext } from 'src/contexts/CustomSnackBarContext';
 import { CompanySettingsContext } from '../../../contexts/CompanySettingsContext';
@@ -74,7 +74,7 @@ import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
 // removed Pro state persistence; using model-based persistence below
 import { Pageable, Sort } from '../../../models/owns/page';
-import { googleMapsConfig } from '../../../config';
+// Removed google maps dependency; using BasicMap (Leaflet)
 
 function Locations() {
   const { t }: { t: any } = useTranslation();
@@ -83,7 +83,7 @@ function Locations() {
   const { showSnackBar } = useContext(CustomSnackBarContext);
   const { getFormattedDate } = useContext(CompanySettingsContext);
   const [openDelete, setOpenDelete] = useState<boolean>(false);
-  const { apiKey } = googleMapsConfig;
+  // Map no longer requires an API key
 
   const { locationsHierarchy, locations, loadingGet } = useSelector(
     (state) => state.locations
@@ -123,7 +123,7 @@ function Locations() {
   const savedLocationsState = loadLocationsGridState();
   const tabs = [
     { value: 'list', label: t('list_view') },
-    ...(apiKey ? [{ value: 'map', label: t('map_view') }] : [])
+    { value: 'map', label: t('map_view') }
   ];
   const handleTabsChange = (_event: ChangeEvent<{}>, value: string): void => {
     setCurrentTab(value);
@@ -367,24 +367,24 @@ function Locations() {
       label: t('customers'),
       placeholder: 'Select customers'
     },
-    ...(apiKey
-      ? ([
-          {
-            name: 'mapSwitch',
-            type: 'checkbox',
-            label: t('put_location_in_map'),
-            relatedFields: [
-              { field: 'mapTitle', value: false, hide: true },
-              { field: 'coordinates', value: false, hide: true }
-            ]
-          },
-          {
-            name: 'mapTitle',
-            type: 'titleGroupField',
-            label: t('map_coordinates')
-          }
-        ] as IField[])
-      : []),
+    ...(
+      [
+        {
+          name: 'mapSwitch',
+          type: 'checkbox',
+          label: t('put_location_in_map'),
+          relatedFields: [
+            { field: 'mapTitle', value: false, hide: true },
+            { field: 'coordinates', value: false, hide: true }
+          ]
+        },
+        {
+          name: 'mapTitle',
+          type: 'titleGroupField',
+          label: t('map_coordinates')
+        }
+      ] as IField[]
+    ),
     {
       name: 'image',
       type: 'file',
@@ -836,7 +836,7 @@ function Locations() {
                   justifyContent: 'center'
                 }}
               >
-                <Map
+                <BasicMap
                   dimensions={{ width: 1000, height: 500 }}
                   locations={locations
                     .filter((location) => location.longitude)
