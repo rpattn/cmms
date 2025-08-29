@@ -67,16 +67,59 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
     (state) => state.vendors
   );
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const VENDOR_GRID_STATE_KEY = 'vendorCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadVendorGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(VENDOR_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveVendorGridState = (partial: GridSavedState) => {
+    const prev = loadVendorGridState();
+    localStorage.setItem(
+      VENDOR_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedVendorState = loadVendorGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedVendorState.pageSize ?? 10,
+    pageNum: savedVendorState.page ?? 0,
     direction: 'DESC'
   });
   const [currentVendor, setCurrentVendor] = useState<Vendor>();
   const [viewOrUpdate, setViewOrUpdate] = useState<'view' | 'update'>('view');
   const { showSnackBar } = useContext(CustomSnackBarContext);
   const { hasEditPermission, hasDeletePermission } = useAuth();
+  const vendorFieldMapping: Record<string, string> = {
+    companyName: 'companyName',
+    name: 'name',
+    vendorType: 'vendorType',
+    email: 'email',
+    phone: 'phone',
+    website: 'website',
+    rate: 'rate'
+  };
+  // Apply saved sort model to criteria on mount
+  React.useEffect(() => {
+    const sm = savedVendorState.sortModel?.[0];
+    if (sm && vendorFieldMapping[sm.field]) {
+      setCriteria((prev) => ({
+        ...prev,
+        sortField: vendorFieldMapping[sm.field],
+        direction: (sm.sort?.toUpperCase() || 'ASC') as SortDirection
+      }));
+    }
+  }, []);
 
   const onQueryChange = (event) => {
     onSearchQueryChange<Vendor>(event, criteria, setCriteria, [
@@ -399,12 +442,19 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
         pagination
         paginationMode="server"
         sortingMode="server"
-        onPageSizeChange={onPageSizeChange}
-        onPageChange={onPageChange}
+        onPageSizeChange={(size) => {
+          saveVendorGridState({ pageSize: size });
+          onPageSizeChange(size);
+        }}
+        onPageChange={(page) => {
+          saveVendorGridState({ page });
+          onPageChange(page);
+        }}
         rowsPerPageOptions={[10, 20, 50]}
         columns={columns}
         loading={loadingGet}
         onSortModelChange={(model) => {
+          saveVendorGridState({ sortModel: model });
           if (model.length === 0) {
             setCriteria({
               ...criteria,
@@ -445,9 +495,15 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
         }}
         initialState={{
           columns: {
-            columnVisibilityModel: {}
+            columnVisibilityModel: savedVendorState.columnVisibilityModel || {}
+          },
+          sorting: {
+            sortModel: savedVendorState.sortModel || []
           }
         }}
+        onColumnVisibilityModelChange={(model) =>
+          saveVendorGridState({ columnVisibilityModel: model })
+        }
         onRowClick={(params) => handleOpenDetails(Number(params.id))}
       />
     </Box>

@@ -67,10 +67,33 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
     (state) => state.customers
   );
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const CUSTOMER_GRID_STATE_KEY = 'customerCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadCustomerGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(CUSTOMER_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveCustomerGridState = (partial: GridSavedState) => {
+    const prev = loadCustomerGridState();
+    localStorage.setItem(
+      CUSTOMER_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedCustomerState = loadCustomerGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedCustomerState.pageSize ?? 10,
+    pageNum: savedCustomerState.page ?? 0,
     direction: 'DESC'
   });
   const { hasEditPermission, hasDeletePermission } = useAuth();
@@ -78,6 +101,25 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
   const [viewOrUpdate, setViewOrUpdate] = useState<'view' | 'update'>('view');
   const [openDelete, setOpenDelete] = useState<boolean>(false);
   const { showSnackBar } = useContext(CustomSnackBarContext);
+  const customerFieldMapping: Record<string, string> = {
+    companyName: 'companyName',
+    name: 'name',
+    customerType: 'customerType',
+    email: 'email',
+    phone: 'phone',
+    website: 'website',
+    billingCurrency: 'billingCurrency.name'
+  };
+  React.useEffect(() => {
+    const sm = savedCustomerState.sortModel?.[0];
+    if (sm && customerFieldMapping[sm.field]) {
+      setCriteria((prev) => ({
+        ...prev,
+        sortField: customerFieldMapping[sm.field],
+        direction: (sm.sort?.toUpperCase() || 'ASC') as SortDirection
+      }));
+    }
+  }, []);
 
   const onQueryChange = (event) => {
     onSearchQueryChange<Customer>(event, criteria, setCriteria, [
@@ -406,7 +448,7 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
         width: '95%'
       }}
     >
-      <CommunityDataGrid
+<CommunityDataGrid
         pageSize={criteria.pageSize}
         page={criteria.pageNum}
         rows={customers.content}
@@ -414,9 +456,16 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
         pagination
         paginationMode="server"
         sortingMode="server"
-        onPageSizeChange={onPageSizeChange}
-        onPageChange={onPageChange}
+        onPageSizeChange={(size) => {
+          saveCustomerGridState({ pageSize: size });
+          onPageSizeChange(size);
+        }}
+        onPageChange={(page) => {
+          saveCustomerGridState({ page });
+          onPageChange(page);
+        }}
         onSortModelChange={(model) => {
+          saveCustomerGridState({ sortModel: model });
           if (model.length === 0) {
             setCriteria({
               ...criteria,
@@ -460,9 +509,15 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
         }}
         initialState={{
           columns: {
-            columnVisibilityModel: {}
+            columnVisibilityModel: savedCustomerState.columnVisibilityModel || {}
+          },
+          sorting: {
+            sortModel: savedCustomerState.sortModel || []
           }
         }}
+        onColumnVisibilityModelChange={(model) =>
+          saveCustomerGridState({ columnVisibilityModel: model })
+        }
         onRowClick={(params) => handleOpenDetails(Number(params.id))}
       />
     </Box>
