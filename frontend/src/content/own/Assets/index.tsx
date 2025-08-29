@@ -29,7 +29,7 @@ import {
 import { useDispatch, useSelector } from '../../../store';
 import * as React from 'react';
 import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
-import { useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
@@ -140,7 +140,7 @@ function Assets() {
     );
   };
   const savedAssetState = loadAssetGridState();
-  const [view, setView] = useState<ViewType>(savedAssetState.view || 'hierarchy');
+  const [view, setView] = useState<ViewType>('hierarchy');
   const [pageable, setPageable] = useState<Pageable>({
     page: 0,
     size: 1000
@@ -717,6 +717,20 @@ useEffect(() => {
       dispatch(getAssetChildren(row.id, row.hierarchy, pageable));
     }
   };
+
+  // Rehydrate expanded tree: ensure expanded nodes have their children loaded on mount/navigation
+  const fetchedOnceRef = useRef<Set<number>>(new Set());
+  useEffect(() => {
+    if (!assetsHierarchy?.length) return;
+    for (const row of assetsHierarchy as AssetRow[]) {
+      if (expandedIds.has(row.id) && row.hasChildren) {
+        if (!fetchedOnceRef.current.has(row.id) || !row.childrenFetched) {
+          fetchedOnceRef.current.add(row.id);
+          dispatch(getAssetChildren(row.id, row.hierarchy, pageable));
+        }
+      }
+    }
+  }, [assetsHierarchy, expandedIds, pageable, dispatch]);
   if (hasViewPermission(PermissionEntity.ASSETS))
     return (
       <>

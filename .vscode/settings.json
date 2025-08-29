@@ -1,3 +1,28 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic"
+    // 🔹 Editor behavior
+    "workbench.editor.enablePreview": false, // Don't keep multiple preview tabs open
+    // 🔹 Search & indexing
+    "search.followSymlinks": false, // Don't follow symlinks (less indexing overhead)
+    "search.useIgnoreFiles": true, // Respect .gitignore and .ignore files
+    "files.watcherExclude": { // Stop watching these heavy folders
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true,
+        "**/.git": true,
+        "**/.hg": true
+    },
+    "search.exclude": {
+        "**/node_modules": true,
+        "**/dist": true,
+        "**/build": true
+    },
+    // 🔹 Large file handling
+    // 🔹 TypeScript/JavaScript optimizations
+    "typescript.disableAutomaticTypeAcquisition": true, // Stop auto-downloading type defs
+    "javascript.suggest.autoImports": false, // Reduce background scanning for imports
+    "typescript.suggest.autoImports": false,
+    // 🔹 UI performance
+    "editor.minimap.enabled": false, // Turn off minimap (uses memory for rendering)
+    "editor.renderWhitespace": "none", // Don't render extra whitespace
+    "editor.smoothScrolling": false // Disable GPU scrolling
 }

@@ -36,11 +36,11 @@ Goal: migrate away from `@mui/x-data-grid-pro` and `@mui/x-date-pickers-pro` to 
 ## Progress Log
 - [x] Step 1: Add `CommunityDataGrid`
 - [x] Step 2: Convert one non-tree page (Vendors)
-- [ ] Step 3: Swap persistence hook
-- [ ] Step 4: Convert remaining flat tables
-- [ ] Step 5: Tree alternative prototype
-- [ ] Step 6: Replace date range pickers
-- [ ] Step 7: Remove Pro deps and license
+- [x] Step 3: Swap persistence hook (model-based)
+- [x] Step 4: Convert remaining flat tables (Vendors, Customers, People, Requests, Files, Parts, Purchase Orders, Meters, Preventive Maintenance, Checklists, Roles, Asset subpages)
+- [x] Step 5: Tree alternative (Assets, Locations). Selection modals pending.
+- [ ] Step 6: Replace date range pickers (Pro → community or `react-date-range`)
+- [ ] Step 7: Remove Pro deps and license (drop `LicenseInfo` usage; uninstall packages)
 
 ## Implementation Notes
 - `CommunityDataGrid` created at `frontend/src/content/own/components/CustomDatagrid/CommunityDataGrid.tsx`:
@@ -87,8 +87,35 @@ Goal: migrate away from `@mui/x-data-grid-pro` and `@mui/x-date-pickers-pro` to 
    - Replaced `CustomDataGrid` with `CommunityDataGrid`.
    - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
    - Added model-based persistence for pagination, sorting, and columns.
- - Preventive Maintenance migrated to community grid:
-   - File: `frontend/src/content/own/PreventiveMaintenance/index.tsx`
+- Preventive Maintenance migrated to community grid:
+  - File: `frontend/src/content/own/PreventiveMaintenance/index.tsx`
+  - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+  - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
+  - Added model-based persistence for pagination, sorting, and columns.
+ - Checklists migrated to community grid:
+   - File: `frontend/src/content/own/Settings/Checklists/index.tsx`
    - Replaced `CustomDataGrid` with `CommunityDataGrid`.
-   - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
-   - Added model-based persistence for pagination, sorting, and columns.
+ - Roles migrated to community grid:
+   - File: `frontend/src/content/own/Settings/Roles/index.tsx`
+   - Replaced `CustomDatagrid` with `CommunityDataGrid`.
+ - Analytics WOModals migrated to community grid:
+   - Files: `frontend/src/content/own/Analytics/*/WOModal.tsx`
+   - Replaced `CustomDataGrid` with `CommunityDataGrid` (columns typed via `CustomDatagridColumn`).
+ - Assets (tree):
+   - File: `frontend/src/content/own/Assets/index.tsx`
+   - Community hierarchy with local expand/collapse + lazy loading.
+   - Parent-first rendering (preorder) so children appear under parent.
+   - Model-based persistence: view, page/pageSize (list), column visibility, expandedIds; rehydrate expansions on load.
+ - Locations (tree):
+   - File: `frontend/src/content/own/Locations/index.tsx`
+   - Community hierarchy with local expand/collapse + lazy loading.
+   - Parent-first rendering (preorder) so children appear under parent.
+   - Model-based persistence: tab (list/map), column visibility, expandedIds; pagination hidden.
+
+## Next Steps
+- Selection modals: migrate `SelectAssetModal.tsx` and `SelectLocationModal.tsx` off Pro (adopt same hierarchy pattern or use a TreeView).
+- Date range: replace `@mui/x-date-pickers-pro` usages with community date pickers (v6) or `react-date-range`.
+- Remove Pro:
+  - Delete `LicenseInfo.setLicenseKey` from `frontend/src/index.tsx`.
+  - Uninstall `@mui/x-data-grid-pro` and `@mui/x-date-pickers-pro`.
+  - Verify no lingering Pro imports.
