@@ -33,9 +33,8 @@ import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid, {
-  CustomDatagridColumn
-} from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
+import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import {
   GridRenderCellParams,
@@ -63,8 +62,7 @@ import { exportEntity } from '../../../slices/exports';
 import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
 import { canAddReading, onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 
 const LabelWrapper = styled(Box)(
   ({ theme }) => `
@@ -103,10 +101,33 @@ function Meters() {
     (state) => state.meters
   );
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const METERS_GRID_STATE_KEY = 'metersCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadMetersGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(METERS_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveMetersGridState = (partial: GridSavedState) => {
+    const prev = loadMetersGridState();
+    localStorage.setItem(
+      METERS_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedMetersState = loadMetersGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedMetersState.pageSize ?? 10,
+    pageNum: savedMetersState.page ?? 0,
     direction: 'DESC'
   });
   const { loadingExport } = useSelector((state) => state.exports);
@@ -297,8 +318,7 @@ function Meters() {
         getFormattedDate(params.value)
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'meter');
+  // Pro-only api removed in community build
   const fields: Array<IField> = [
     {
       name: 'name',
@@ -595,8 +615,7 @@ function Meters() {
                 }}
               >
                 <Box sx={{ width: '95%' }}>
-                  <CustomDataGrid
-                    apiRef={apiRef}
+                  <CommunityDataGrid
                     columns={columns}
                     loading={loadingGet}
                     pageSize={criteria.pageSize}
@@ -606,10 +625,17 @@ function Meters() {
                     pagination
                     paginationMode="server"
                     sortingMode="server"
-                    onPageSizeChange={onPageSizeChange}
-                    onPageChange={onPageChange}
+                    onPageSizeChange={(size) => {
+                      saveMetersGridState({ pageSize: size });
+                      onPageSizeChange(size);
+                    }}
+                    onPageChange={(page) => {
+                      saveMetersGridState({ page });
+                      onPageChange(page);
+                    }}
                     rowsPerPageOptions={[10, 20, 50]}
                     onSortModelChange={(model) => {
+                      saveMetersGridState({ sortModel: model });
                       if (model.length === 0) {
                         setCriteria({
                           ...criteria,
@@ -652,9 +678,16 @@ function Meters() {
                     }}
                     initialState={{
                       columns: {
-                        columnVisibilityModel: {}
+                        columnVisibilityModel:
+                          savedMetersState.columnVisibilityModel || {}
+                      },
+                      sorting: {
+                        sortModel: savedMetersState.sortModel || []
                       }
                     }}
+                    onColumnVisibilityModelChange={(model) =>
+                      saveMetersGridState({ columnVisibilityModel: model })
+                    }
                   />
                 </Box>
               </Card>

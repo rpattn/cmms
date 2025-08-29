@@ -1,6 +1,6 @@
 import { Box, Card, Grid } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridRowParams,
@@ -66,7 +66,7 @@ const AssetFiles = ({ asset }: PropsType) => {
         <Grid item xs={12}>
           <Card sx={{ p: 2 }}>
             <Box sx={{ width: '95%' }}>
-              <CustomDataGrid
+              <CommunityDataGrid
                 columns={columns}
                 rows={asset?.files ?? []}
                 components={{

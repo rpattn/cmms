@@ -35,9 +35,8 @@ import {
 } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid, {
-  CustomDatagridColumn
-} from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
+import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
   GridRenderCellParams,
   GridToolbar,
@@ -96,8 +95,7 @@ import _ from 'lodash';
 import SearchInput from '../components/SearchInput';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
 import { getPreventiveMaintenanceUrl } from 'src/utils/urlPaths';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 
 function WorkOrders() {
   const { t }: { t: any } = useTranslation();
@@ -514,8 +512,7 @@ function WorkOrders() {
     }
   ];
   // dataGrid state
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'workOrder');
+  // Pro-only grid api/state removed in community build
 
   // Mapping for column fields to API field names for sorting
   const fieldMapping: Record<string, string> = {
@@ -987,8 +984,7 @@ function WorkOrders() {
             <Divider sx={{ mt: 1 }} />
             <Box sx={{ width: '95%' }}>
               {currentTab === 'list' ? (
-                <CustomDataGrid
-                  apiRef={apiRef}
+                <CommunityDataGrid
                   pageSize={criteria.pageSize}
                   page={criteria.pageNum}
                   columns={columns}

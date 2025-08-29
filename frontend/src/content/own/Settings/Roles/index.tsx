@@ -39,7 +39,7 @@ import {
   GridRowParams,
   GridToolbar
 } from '@mui/x-data-grid';
-import CustomDatagrid from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import RoleDetails from './RoleDetails';
 import EditRole from './EditRole';
@@ -472,7 +472,7 @@ function Roles() {
           />
           {renderDeleteModal()}
           <Box sx={{ mt: 4, width: '95%' }}>
-            <CustomDatagrid
+            <CommunityDataGrid
               rows={roles}
               columns={columns}
               loading={loadingGet}

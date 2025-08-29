@@ -12,7 +12,7 @@ import {
   Typography
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridRowParams,
@@ -304,7 +304,7 @@ const AssetDowntimes = ({ asset }: PropsType) => {
                   </Button>
                 )}
               </Stack>
-              <CustomDataGrid
+              <CommunityDataGrid
                 columns={columns}
                 rows={downtimes.filter((downtime) => downtime.duration)}
                 components={{

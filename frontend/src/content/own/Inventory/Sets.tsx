@@ -14,7 +14,7 @@ import {
   useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridRenderCellParams,
   GridToolbar,
@@ -42,8 +42,7 @@ import { CustomSnackBarContext } from '../../../contexts/CustomSnackBarContext';
 import { CompanySettingsContext } from '../../../contexts/CompanySettingsContext';
 import NoRowsMessageWrapper from '../components/NoRowsMessageWrapper';
 import { formatSelectMultiple } from '../../../utils/formatters';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 
 interface PropsType {
   setAction: (p: () => () => void) => void;
@@ -143,8 +142,7 @@ const Sets = ({ setAction }: PropsType) => {
       valueGetter: (params) => getFormattedDate(params.row.createdAt)
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'multiPart');
+  // Pro-only grid api/state removed in community build
   const fields: Array<IField> = [
     {
       name: 'name',
@@ -330,8 +328,7 @@ const Sets = ({ setAction }: PropsType) => {
       </Tabs>
       {currentTab === 'list' && (
         <Box sx={{ width: '95%' }}>
-          <CustomDataGrid
-            apiRef={apiRef}
+          <CommunityDataGrid
             columns={columns}
             rows={multiParts}
             loading={loadingGet}
@@ -353,6 +350,7 @@ const Sets = ({ setAction }: PropsType) => {
                 columnVisibilityModel: {}
               }
             }}
+            onColumnVisibilityModelChange={() => {}}
           />
         </Box>
       )}

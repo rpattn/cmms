@@ -58,18 +58,37 @@ Goal: migrate away from `@mui/x-data-grid-pro` and `@mui/x-date-pickers-pro` to 
   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
   - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
   - Preserved server pagination/sorting and NoRows overlay.
- - People page migrated to community grid:
-   - File: `frontend/src/content/own/PeopleAndTeams/People.tsx`
-   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
-   - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
-   - Added model-based persistence for pagination, sorting, and columns.
- - Requests page migrated to community grid:
+- People page migrated to community grid:
+  - File: `frontend/src/content/own/PeopleAndTeams/People.tsx`
+  - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+  - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
+  - Added model-based persistence for pagination, sorting, and columns.
+- Requests page migrated to community grid:
    - File: `frontend/src/content/own/Requests/index.tsx`
    - Replaced `CustomDataGrid` with `CommunityDataGrid`.
    - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
-   - Added model-based persistence for pagination, sorting, and columns.
- - Files page migrated to community grid:
+  - Added model-based persistence for pagination, sorting, and columns.
+- Files page migrated to community grid:
    - File: `frontend/src/content/own/Files/index.tsx`
+   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+  - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
+  - Added model-based persistence for pagination, sorting, and columns.
+ - Parts page migrated to community grid:
+   - File: `frontend/src/content/own/Inventory/Parts.tsx`
+   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+   - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
+   - Added model-based persistence for pagination, sorting, and columns.
+ - Purchase Orders migrated to community grid:
+   - File: `frontend/src/content/own/PurchaseOrders/index.tsx`
+   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+   - Added model-based persistence for pagination, sorting, and columns.
+ - Meters page migrated to community grid:
+   - File: `frontend/src/content/own/Meters/index.tsx`
+   - Replaced `CustomDataGrid` with `CommunityDataGrid`.
+   - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
+   - Added model-based persistence for pagination, sorting, and columns.
+ - Preventive Maintenance migrated to community grid:
+   - File: `frontend/src/content/own/PreventiveMaintenance/index.tsx`
    - Replaced `CustomDataGrid` with `CommunityDataGrid`.
    - Removed Pro-only `useGridApiRef` and `useGridStatePersist` usage.
    - Added model-based persistence for pagination, sorting, and columns.

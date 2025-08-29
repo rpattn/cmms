@@ -12,7 +12,7 @@ import {
   Typography
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import { GridRowParams, GridToolbar } from '@mui/x-data-grid';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import { AssetDTO } from '../../../../models/owns/asset';
@@ -196,7 +196,7 @@ const AssetMeters = ({ asset }: PropsType) => {
                   )}
                 </Stack>
               )}
-              <CustomDataGrid
+              <CommunityDataGrid
                 columns={columns}
                 rows={readings}
                 components={{

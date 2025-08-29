@@ -16,7 +16,7 @@ import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import { GridRenderCellParams, GridToolbar } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import PurchaseOrder from '../../../models/owns/purchaseOrder';
@@ -49,7 +49,7 @@ import {
   getPartQuantitiesByPurchaseOrder
 } from '../../../slices/partQuantity';
 import Category from '../../../models/owns/category';
-import { SearchCriteria } from '../../../models/owns/page';
+import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import { onSearchQueryChange } from '../../../utils/overall';
 import SearchInput from '../components/SearchInput';
 
@@ -72,10 +72,33 @@ function PurchaseOrders() {
     (state) => state.purchaseOrders
   );
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const PO_GRID_STATE_KEY = 'poCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadPoGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(PO_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const savePoGridState = (partial: GridSavedState) => {
+    const prev = loadPoGridState();
+    localStorage.setItem(
+      PO_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedPoState = loadPoGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedPoState.pageSize ?? 10,
+    pageNum: savedPoState.page ?? 0,
     direction: 'DESC'
   });
 
@@ -565,7 +588,7 @@ function PurchaseOrders() {
                 }}
               >
                 <Box sx={{ width: '95%' }}>
-                  <CustomDataGrid
+                  <CommunityDataGrid
                     columns={columns}
                     pageSize={criteria.pageSize}
                     page={criteria.pageNum}
@@ -573,12 +596,18 @@ function PurchaseOrders() {
                     rowCount={purchaseOrders.totalElements}
                     pagination
                     paginationMode="server"
-                    onPageSizeChange={onPageSizeChange}
-                    onPageChange={onPageChange}
+                    onPageSizeChange={(size) => {
+                      savePoGridState({ pageSize: size });
+                      onPageSizeChange(size);
+                    }}
+                    onPageChange={(page) => {
+                      savePoGridState({ page });
+                      onPageChange(page);
+                    }}
                     rowsPerPageOptions={[10, 20, 50]}
                     loading={loadingGet}
                     components={{
-                      
+
                       NoRowsOverlay: () => (
                         <NoRowsMessageWrapper
                           message={t('noRows.po.message')}
@@ -591,9 +620,16 @@ function PurchaseOrders() {
                     }
                     initialState={{
                       columns: {
-                        columnVisibilityModel: {}
+                        columnVisibilityModel:
+                          savedPoState.columnVisibilityModel || {}
+                      },
+                      sorting: {
+                        sortModel: savedPoState.sortModel || []
                       }
                     }}
+                    onColumnVisibilityModelChange={(model) =>
+                      savePoGridState({ columnVisibilityModel: model })
+                    }
                   />
                 </Box>
               </Card>

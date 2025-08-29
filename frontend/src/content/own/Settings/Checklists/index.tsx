@@ -1,7 +1,7 @@
 import { Box, Button, Grid } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import SettingsLayout from '../SettingsLayout';
-import CustomDataGrid from '../../components/CustomDatagrid';
+import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import {
   GridActionsCellItem,
@@ -129,7 +129,7 @@ function Checklists() {
               >
                 {t('create_checklist')}
               </Button>
-              <CustomDataGrid
+              <CommunityDataGrid
                 columns={columns}
                 rows={checklists}
                 loading={loadingGet}

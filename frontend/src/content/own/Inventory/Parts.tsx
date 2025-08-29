@@ -19,7 +19,7 @@ import {
   useTheme
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridRenderCellParams,
   GridToolbar,
@@ -63,8 +63,7 @@ import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
 import { PermissionEntity } from '../../../models/owns/role';
 import SearchInput from '../components/SearchInput';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 import { CategoryMiniDTO } from '../../../models/owns/category';
 
 interface PropsType {
@@ -87,10 +86,33 @@ const Parts = ({ setAction }: PropsType) => {
   );
   const { parts, loadingGet, singlePart } = useSelector((state) => state.parts);
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const PARTS_GRID_STATE_KEY = 'partsCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadPartsGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(PARTS_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const savePartsGridState = (partial: GridSavedState) => {
+    const prev = loadPartsGridState();
+    localStorage.setItem(
+      PARTS_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedPartsState = loadPartsGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedPartsState.pageSize ?? 10,
+    pageNum: savedPartsState.page ?? 0,
     direction: 'DESC'
   });
   const [openDelete, setOpenDelete] = useState<boolean>(false);
@@ -431,8 +453,7 @@ const Parts = ({ setAction }: PropsType) => {
       label: t('files')
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'part');
+  // Pro-only grid api/state removed in community build
   const shape = {
     name: Yup.string().required(t('required_part_name'))
   };
@@ -697,8 +718,7 @@ const Parts = ({ setAction }: PropsType) => {
         </IconButton>
       </Grid>
       {currentTab === 'list' && (
-        <CustomDataGrid
-          apiRef={apiRef}
+        <CommunityDataGrid
           columns={columns}
           pageSize={criteria.pageSize}
           page={criteria.pageNum}
@@ -707,11 +727,18 @@ const Parts = ({ setAction }: PropsType) => {
           pagination
           paginationMode="server"
           sortingMode="server"
-          onPageSizeChange={onPageSizeChange}
-          onPageChange={onPageChange}
+          onPageSizeChange={(size) => {
+            savePartsGridState({ pageSize: size });
+            onPageSizeChange(size);
+          }}
+          onPageChange={(page) => {
+            savePartsGridState({ page });
+            onPageChange(page);
+          }}
           rowsPerPageOptions={[10, 20, 50]}
           loading={loadingGet}
           onSortModelChange={(model) => {
+            savePartsGridState({ sortModel: model });
             if (model.length === 0) {
               setCriteria({
                 ...criteria,
@@ -756,9 +783,16 @@ const Parts = ({ setAction }: PropsType) => {
           }}
           initialState={{
             columns: {
-              columnVisibilityModel: {}
+              columnVisibilityModel:
+                savedPartsState.columnVisibilityModel || {}
+            },
+            sorting: {
+              sortModel: savedPartsState.sortModel || []
             }
           }}
+          onColumnVisibilityModelChange={(model) =>
+            savePartsGridState({ columnVisibilityModel: model })
+          }
         />
       )}
       {currentTab === 'card' && (

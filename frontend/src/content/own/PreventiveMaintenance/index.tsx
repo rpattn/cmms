@@ -28,9 +28,8 @@ import {
 import { useDispatch, useSelector } from '../../../store';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import CustomDataGrid, {
-  CustomDatagridColumn
-} from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
+import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
   FilterField,
   SearchCriteria,
@@ -66,8 +65,7 @@ import Category from '../../../models/owns/category';
 import { LocationMiniDTO } from '../../../models/owns/location';
 import { AssetMiniDTO } from '../../../models/owns/asset';
 import { patchTasksOfPreventiveMaintenance } from '../../../slices/task';
-import { useGridApiRef } from '@mui/x-data-grid-pro';
-import useGridStatePersist from '../../../hooks/useGridStatePersist';
+// removed Pro grid apiRef and state persistence for community grid
 import EnumFilter from '../WorkOrders/Filters/EnumFilter';
 import SignalCellularAltTwoToneIcon from '@mui/icons-material/SignalCellularAltTwoTone';
 import SearchInput from '../components/SearchInput';
@@ -98,6 +96,29 @@ function Files() {
   const { preventiveMaintenances, loadingGet, singlePreventiveMaintenance } =
     useSelector((state) => state.preventiveMaintenances);
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const PM_GRID_STATE_KEY = 'pmCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadPmGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(PM_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const savePmGridState = (partial: GridSavedState) => {
+    const prev = loadPmGridState();
+    localStorage.setItem(
+      PM_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedPmState = loadPmGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [
       {
@@ -108,8 +129,8 @@ function Files() {
         enumName: 'PRIORITY'
       }
     ],
-    pageSize: 10,
-    pageNum: 0,
+    pageSize: savedPmState.pageSize ?? 10,
+    pageNum: savedPmState.page ?? 0,
     direction: 'DESC'
   });
   const { showSnackBar } = useContext(CustomSnackBarContext);
@@ -334,8 +355,7 @@ function Files() {
         params.value?.name
     }
   ];
-  const apiRef = useGridApiRef();
-  useGridStatePersist(apiRef, columns, 'pm');
+  // Pro-only api removed in community build
 
   // Mapping for column fields to API field names for sorting
   const fieldMapping: Record<string, string> = {
@@ -641,8 +661,7 @@ function Files() {
                 <SearchInput onChange={debouncedQueryChange} />
               </Stack>
               <Box sx={{ width: '95%' }}>
-                <CustomDataGrid
-                  apiRef={apiRef}
+                <CommunityDataGrid
                   columns={columns}
                   loading={loadingGet}
                   pageSize={criteria.pageSize}
@@ -653,6 +672,7 @@ function Files() {
                   paginationMode="server"
                   sortingMode="server"
                   onSortModelChange={(model) => {
+                    savePmGridState({ sortModel: model });
                     if (model.length === 0) {
                       setCriteria((prevState) => ({
                         ...prevState,
@@ -677,11 +697,24 @@ function Files() {
                   }}
                   initialState={{
                     columns: {
-                      columnVisibilityModel: {}
+                      columnVisibilityModel:
+                        savedPmState.columnVisibilityModel || {}
+                    },
+                    sorting: {
+                      sortModel: savedPmState.sortModel || []
                     }
                   }}
-                  onPageSizeChange={onPageSizeChange}
-                  onPageChange={onPageChange}
+                  onPageSizeChange={(size) => {
+                    savePmGridState({ pageSize: size });
+                    onPageSizeChange(size);
+                  }}
+                  onPageChange={(page) => {
+                    savePmGridState({ page });
+                    onPageChange(page);
+                  }}
+                  onColumnVisibilityModelChange={(model) =>
+                    savePmGridState({ columnVisibilityModel: model })
+                  }
                   rowsPerPageOptions={[10, 20, 50]}
                   onRowClick={({ id }) => handleOpenDetails(Number(id))}
                   components={{

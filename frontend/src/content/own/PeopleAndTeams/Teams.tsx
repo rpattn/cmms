@@ -13,7 +13,7 @@ import { useTranslation } from 'react-i18next';
 import Form from '../components/form';
 import * as Yup from 'yup';
 import { IField } from '../type';
-import CustomDataGrid from '../components/CustomDatagrid';
+import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import Team from '../../../models/owns/team';
 import {
   GridEnrichedColDef,
@@ -61,10 +61,33 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
   const [currentTeam, setCurrentTeam] = useState<Team>();
   const { teams, loadingGet, singleTeam } = useSelector((state) => state.teams);
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
+  const TEAMS_GRID_STATE_KEY = 'teamsCommunityGridState';
+  type GridSavedState = {
+    columnVisibilityModel?: any;
+    sortModel?: any[];
+    pageSize?: number;
+    page?: number;
+  };
+  const loadTeamsGridState = (): GridSavedState => {
+    try {
+      const raw = localStorage.getItem(TEAMS_GRID_STATE_KEY);
+      return raw ? JSON.parse(raw) : {};
+    } catch {
+      return {};
+    }
+  };
+  const saveTeamsGridState = (partial: GridSavedState) => {
+    const prev = loadTeamsGridState();
+    localStorage.setItem(
+      TEAMS_GRID_STATE_KEY,
+      JSON.stringify({ ...prev, ...partial })
+    );
+  };
+  const savedTeamsState = loadTeamsGridState();
   const [criteria, setCriteria] = useState<SearchCriteria>({
     filterFields: [],
-    pageSize: 10,
-    pageNum: 0
+    pageSize: savedTeamsState.pageSize ?? 10,
+    pageNum: savedTeamsState.page ?? 0
   });
   const { showSnackBar } = useContext(CustomSnackBarContext);
   const { hasEditPermission, hasDeletePermission } = useAuth();
@@ -112,9 +135,11 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
   }, [singleTeam, teams]);
 
   const onPageSizeChange = (size: number) => {
+    saveTeamsGridState({ pageSize: size });
     setCriteria({ ...criteria, pageSize: size });
   };
   const onPageChange = (number: number) => {
+    saveTeamsGridState({ page: number });
     setCriteria({ ...criteria, pageNum: number });
   };
 
@@ -257,7 +282,7 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
       }}
     >
       {teams.content.length !== 0 ? (
-        <CustomDataGrid
+        <CommunityDataGrid
           pageSize={criteria.pageSize}
           page={criteria.pageNum}
           rows={teams.content}
@@ -471,7 +496,61 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
           </Box>
         </Stack>
       )}
-      {Renderteams()}
+      <CommunityDataGrid
+        pageSize={criteria.pageSize}
+        page={criteria.pageNum}
+        rows={teams.content}
+        rowCount={teams.totalElements}
+        pagination
+        paginationMode="server"
+        sortingMode="server"
+        onPageSizeChange={onPageSizeChange}
+        onPageChange={onPageChange}
+        rowsPerPageOptions={[10, 20, 50]}
+        loading={loadingGet}
+        onSortModelChange={(model) => {
+          saveTeamsGridState({ sortModel: model });
+          if (model.length === 0) {
+            setCriteria({
+              ...criteria,
+              sortField: undefined,
+              direction: undefined
+            });
+            return;
+          }
+
+          const field = model[0].field;
+          const fieldMapping: Record<string, string> = {
+            name: 'name',
+            description: 'description'
+          };
+          const mappedField = fieldMapping[field];
+          if (!mappedField) return;
+          setCriteria({
+            ...criteria,
+            sortField: mappedField,
+            direction: (model[0].sort?.toUpperCase() || 'ASC') as SortDirection
+          });
+        }}
+        columns={columns}
+        components={{
+          Toolbar: GridToolbar
+        }}
+        initialState={{
+          columns: {
+            columnVisibilityModel: savedTeamsState.columnVisibilityModel || {}
+          },
+          sorting: {
+            sortModel: savedTeamsState.sortModel || []
+          }
+        }}
+        onColumnVisibilityModelChange={(model) =>
+          saveTeamsGridState({ columnVisibilityModel: model })
+        }
+        onRowClick={(params) => {
+          handleOpenModal(teams.content.find((team) => team.id === params.id));
+        }}
+      />
       <ConfirmDialog
         open={openDelete}
         onCancel={() => {
