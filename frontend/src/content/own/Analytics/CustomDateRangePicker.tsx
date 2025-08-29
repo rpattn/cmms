@@ -1,7 +1,7 @@
 import { Box, Card, CardContent, TextField } from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers-pro';
-import { AdapterDayjs } from '@mui/x-date-pickers-pro/AdapterDayjs';
-import { DateRangePicker } from '@mui/x-date-pickers-pro/DateRangePicker';
+import LocalizationProvider from '@mui/lab/LocalizationProvider';
+import AdapterDayjs from '@mui/lab/AdapterDayjs';
+import DatePicker from '@mui/lab/DatePicker';
 import { useTranslation } from 'react-i18next';
 
 interface OwnProps {
@@ -17,23 +17,27 @@ export default function({ start, end, setEnd, setStart }: OwnProps) {
   return (
     <Card>
       <CardContent sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-        <LocalizationProvider
-          localeText={{ start: t('start'), end: t('end') }}
-          dateAdapter={AdapterDayjs}
-        >
-          <DateRangePicker
-            value={[start, end]}
+        <LocalizationProvider dateAdapter={AdapterDayjs}>
+          <DatePicker
+            value={start}
             onChange={(newValue) => {
-              setStart(newValue[0]);
-              setEnd(newValue[1]);
+              if (newValue) {
+                const v: any = newValue as any;
+                setStart(v?.toDate ? v.toDate() : (newValue as unknown as Date));
+              }
             }}
-            renderInput={(startProps, endProps) => (
-              <>
-                <TextField {...startProps} />
-                <Box sx={{ mx: 2 }}> {t('to')} </Box>
-                <TextField {...endProps} />
-              </>
-            )}
+            renderInput={(params) => <TextField {...params} label={t('start')} />}
+          />
+          <Box sx={{ mx: 2 }}> {t('to')} </Box>
+          <DatePicker
+            value={end}
+            onChange={(newValue) => {
+              if (newValue) {
+                const v: any = newValue as any;
+                setEnd(v?.toDate ? v.toDate() : (newValue as unknown as Date));
+              }
+            }}
+            renderInput={(params) => <TextField {...params} label={t('end')} />}
           />
         </LocalizationProvider>
       </CardContent>
