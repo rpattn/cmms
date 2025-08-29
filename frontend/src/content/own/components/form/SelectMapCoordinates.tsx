@@ -1,4 +1,4 @@
-import Map from '../Map';
+import BasicMap from '../BasicMap';
 
 interface SelectMapCoordinatesProps {
   selected: { lat: number; lng: number };
@@ -9,7 +9,7 @@ export default function SelectMapCoordinates({
   selected
 }: SelectMapCoordinatesProps) {
   return (
-    <Map
+    <BasicMap
       dimensions={{ width: 500, height: 500 }}
       select={true}
       selected={selected}

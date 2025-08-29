@@ -383,6 +383,12 @@ function Locations() {
           type: 'titleGroupField',
           label: t('map_coordinates')
         }
+        ,
+        {
+          name: 'coordinates',
+          type: 'coordinates',
+          label: t('coordinates')
+        }
       ] as IField[]
     ),
     {
