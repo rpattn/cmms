@@ -20,8 +20,6 @@
     "@mui/material": "5.8.2",
     "@mui/styles": "5.8.0",
     "@mui/x-data-grid": "^5.17.3",
-    "@mui/x-data-grid-pro": "^5.17.7",
-    "@mui/x-date-pickers-pro": "^5.0.17",
     "@reduxjs/toolkit": "1.8.2",
     "@stomp/stompjs": "^7.0.0",
     "@types/check-types": "^7.3.4",
