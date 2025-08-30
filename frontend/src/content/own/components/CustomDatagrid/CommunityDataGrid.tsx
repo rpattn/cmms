@@ -47,8 +47,34 @@ function CommunityDataGrid(props: CommunityDataGridProps) {
 
   const { notClickable, apiRef: _ignored, ...rest } = props;
   // Normalize deprecated `components/componentsProps` to `slots/slotProps`
-  const incomingSlots = (rest as any).slots ?? (rest as any).components;
-  const incomingSlotProps = (rest as any).slotProps ?? (rest as any).componentsProps;
+  // and translate PascalCase keys to new camelCase slot names
+  let incomingSlots: any = (rest as any).slots;
+  if (!incomingSlots) {
+    const c = (rest as any).components;
+    if (c) {
+      incomingSlots = { ...c };
+      if (c.NoRowsOverlay) incomingSlots.noRowsOverlay = c.NoRowsOverlay;
+      if (c.NoResultsOverlay) incomingSlots.noResultsOverlay = c.NoResultsOverlay;
+      if (c.Toolbar) incomingSlots.toolbar = c.Toolbar;
+      if (c.ColumnMenu) incomingSlots.columnMenu = c.ColumnMenu;
+      if (c.Pagination) incomingSlots.pagination = c.Pagination;
+      if (c.Footer) incomingSlots.footer = c.Footer;
+      if (c.BaseCheckbox) incomingSlots.baseCheckbox = c.BaseCheckbox;
+    }
+  }
+  let incomingSlotProps: any = (rest as any).slotProps;
+  if (!incomingSlotProps) {
+    const cp = (rest as any).componentsProps;
+    if (cp) {
+      incomingSlotProps = { ...cp };
+      if (cp.NoRowsOverlay) incomingSlotProps.noRowsOverlay = cp.NoRowsOverlay;
+      if (cp.NoResultsOverlay) incomingSlotProps.noResultsOverlay = cp.NoResultsOverlay;
+      if (cp.Toolbar) incomingSlotProps.toolbar = cp.Toolbar;
+      if (cp.ColumnMenu) incomingSlotProps.columnMenu = cp.ColumnMenu;
+      if (cp.Pagination) incomingSlotProps.pagination = cp.Pagination;
+      if (cp.Footer) incomingSlotProps.footer = cp.Footer;
+    }
+  }
 
   return (
     <div ref={tableRef} style={{ height: tableHeight, width: '100%' }}>
