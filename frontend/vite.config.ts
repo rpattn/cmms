@@ -1,6 +1,5 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-// import path from 'path'; // Removed, not available in browser/Vite context
 
 // Vite configuration for CRA-to-Vite side-by-side trial
 export default defineConfig(({ mode }) => ({
@@ -30,7 +29,20 @@ export default defineConfig(({ mode }) => ({
   preview: {
     port: 5000
   },
+  build: {
+    rollupOptions: {
+      onwarn(warning, defaultHandler) {
+        if (warning.code === 'MODULE_LEVEL_DIRECTIVE' && /use client/.test(warning.message || '')) {
+          return;
+        }
+        defaultHandler(warning);
+      }
+    }
+  },
   optimizeDeps: {
+    esbuildOptions: {
+      logLevel: 'error'
+    },
     include: [
       '@fullcalendar/react',
       '@fullcalendar/common',
@@ -45,6 +57,9 @@ export default defineConfig(({ mode }) => ({
     alias: {
       src: new URL('./src', import.meta.url).pathname
     }
+  },
+  esbuild: {
+    logLevel: 'error'
   },
   define: {
     // Some browser-targeted packages (e.g., sockjs-client) expect a Node-like global
