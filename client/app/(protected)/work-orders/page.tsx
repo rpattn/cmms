@@ -1,23 +1,10 @@
-import { cookies } from 'next/headers';
-import { API_URL } from '@/lib/env';
+import { api } from '@/lib/api';
 
 type WorkOrder = { id: number; title?: string };
 
 async function getWorkOrders() {
-  const token = cookies().get('session')?.value;
-  const res = await fetch(API_URL + 'work-orders', {
-    headers: {
-      Accept: 'application/json',
-      Authorization: token ? `Bearer ${token}` : ''
-    },
-    // Force server-side fetch
-    cache: 'no-store'
-  });
-  if (!res.ok) {
-    return [] as WorkOrder[];
-  }
   try {
-    return (await res.json()) as WorkOrder[];
+    return await api<WorkOrder[]>('work-orders');
   } catch {
     return [] as WorkOrder[];
   }
@@ -40,4 +27,3 @@ export default async function WorkOrdersPage() {
     </main>
   );
 }
-
