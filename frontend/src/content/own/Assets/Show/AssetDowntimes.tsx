@@ -17,9 +17,9 @@ import {
   GridActionsCellItem,
   GridRowParams,
   GridToolbar,
-  GridValueGetterParams
+  
 } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
 import {
@@ -103,7 +103,7 @@ const AssetDowntimes = ({ asset }: PropsType) => {
     }
     return true;
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'duration',
       headerName: t('duration'),

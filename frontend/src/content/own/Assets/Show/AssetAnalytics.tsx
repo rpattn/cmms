@@ -2,54 +2,19 @@ import {
   Box,
   Button,
   Card, CardContent, CircularProgress,
-  Dialog,
-  DialogContent,
-  DialogTitle, Divider,
+  Divider,
   Grid,
-  MenuItem,
-  Select,
   Stack, TextField,
   Typography
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import CustomDataGrid from '../../components/CustomDatagrid';
-import {
-  GridActionsCellItem,
-  GridRowParams,
-  GridToolbar,
-  GridValueGetterParams
-} from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
-import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
-import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
-import { AssetDTO, AssetStatus } from '../../../../models/owns/asset';
 import { useDispatch, useSelector } from '../../../../store';
-import { editAsset } from '../../../../slices/asset';
-import useAuth from '../../../../hooks/useAuth';
-import { PermissionEntity } from '../../../../models/owns/role';
-import {
-  createAssetDowntime,
-  deleteAssetDowntime,
-  getAssetDowntimes
-} from '../../../../slices/assetDowntime';
 import { useContext, useEffect, useState } from 'react';
-import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
-import Form from '../../components/form';
-import * as Yup from 'yup';
-import { IField } from '../../type';
-import { CustomSnackBarContext } from '../../../../contexts/CustomSnackBarContext';
-import {
-  getHMSString,
-  getHoursAndMinutesAndSeconds
-} from '../../../../utils/formatters';
 import { CompanySettingsContext } from '../../../../contexts/CompanySettingsContext';
-import AssetDowntime from '../../../../models/owns/assetDowntime';
 import { getAssetDetailsOverview } from '../../../../slices/analytics/asset';
-import DateTimePicker from '@mui/lab/DateTimePicker';
 import LocalizationProvider from '@mui/lab/LocalizationProvider';
 import AdapterDayjs from '@mui/lab/AdapterDayjs';
 import DatePicker from '@mui/lab/DatePicker';
-import { Filter } from '../../Analytics/WorkOrder/WOModal';
 import Loading from '../../Analytics/Loading';
 
 interface PropsType {

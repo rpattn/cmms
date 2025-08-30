@@ -14,13 +14,12 @@ import { useContext, useEffect, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
   GridRenderCellParams,
-  GridRowParams,
-  GridToolbar
+  GridRowParams
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import { CompanySettingsContext } from '../../../contexts/CompanySettingsContext';
@@ -196,7 +195,7 @@ function Files() {
       required: true
     }
   ];
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'id',
       headerName: t('id'),
@@ -208,7 +207,7 @@ function Files() {
       headerName: t('name'),
       description: t('name'),
       flex: 1.5,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<File>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },

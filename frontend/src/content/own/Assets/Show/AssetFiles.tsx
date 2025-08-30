@@ -6,7 +6,7 @@ import {
   GridRowParams,
   GridToolbar
 } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { AssetDTO } from '../../../../models/owns/asset';
 import { useDispatch } from '../../../../store';
@@ -34,7 +34,7 @@ const AssetFiles = ({ asset }: PropsType) => {
       );
     }
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),

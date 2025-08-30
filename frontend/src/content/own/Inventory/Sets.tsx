@@ -16,11 +16,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
-  GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridRenderCellParams
 } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import Part from '../../../models/owns/part';
 import ConfirmDialog from '../components/ConfirmDialog';
 import { useDispatch, useSelector } from '../../../store';
@@ -108,13 +106,13 @@ const Sets = ({ setAction }: PropsType) => {
   const handleTabsChange = (_event: ChangeEvent<{}>, value: string): void => {
     setCurrentTab(value);
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
       description: t('name'),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },

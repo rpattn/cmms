@@ -32,14 +32,14 @@ import { useTranslation } from 'react-i18next';
 import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import { SearchCriteria, SortDirection } from '../../../models/owns/page';
 import {
   GridRenderCellParams,
   GridToolbar,
-  GridValueGetterParams
+  
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import Meter from '../../../models/owns/meter';
@@ -104,7 +104,7 @@ function Meters() {
   const METERS_GRID_STATE_KEY = 'metersCommunityGridState';
   type GridSavedState = {
     columnVisibilityModel?: any;
-    sortModel?: any[];
+    sortModel?: readonly any[];
     pageSize?: number;
     page?: number;
   };
@@ -250,7 +250,7 @@ function Meters() {
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<Meter, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -259,7 +259,7 @@ function Meters() {
       headerName: t('next_reading_due'),
       description: t('next_reading_due'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string, Meter>) =>
+      renderCell: (params: GridRenderCellParams<Meter, string>) =>
         canAddReading(params.row) ? (
           <LabelWrapper
             sx={{

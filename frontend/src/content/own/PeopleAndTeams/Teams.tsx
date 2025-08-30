@@ -16,7 +16,7 @@ import { IField } from '../type';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import Team from '../../../models/owns/team';
 import {
-  GridEnrichedColDef,
+  GridColDef,
   GridRenderCellParams,
   GridToolbar
 } from '@mui/x-data-grid';
@@ -192,12 +192,12 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
     name: Yup.string().required('required_team_name')
   };
 
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('team_name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<Team>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -211,7 +211,9 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
       headerName: t('people_in_team'),
       width: 200,
       renderCell: (params: GridRenderCellParams<UserMiniDTO[]>) => (
-        <UserAvatars users={params.value} />
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <UserAvatars users={params.value} />
+        </Box>
       )
     }
   ];

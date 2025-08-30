@@ -1,5 +1,3 @@
-import SettingsLayout from '../SettingsLayout';
-
 import {
   Avatar,
   Box,
@@ -36,11 +34,10 @@ import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import {
   GridActionsCellItem,
   GridRenderCellParams,
-  GridRowParams,
-  GridToolbar
+  GridRowParams
 } from '@mui/x-data-grid';
 import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import RoleDetails from './RoleDetails';
 import EditRole from './EditRole';
 import useAuth from '../../../../hooks/useAuth';
@@ -375,13 +372,13 @@ function Roles() {
     </DialogWrapper>
   );
 
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string, Role>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>
           {params.row.code === 'USER_CREATED'
             ? params.value
@@ -406,7 +403,7 @@ function Roles() {
       headerName: t('type'),
       description: t('type'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <LabelWrapper
           sx={{
             background: params.value
@@ -476,11 +473,7 @@ function Roles() {
               rows={roles}
               columns={columns}
               loading={loadingGet}
-              components={{
-                Toolbar: GridToolbar
-                // Toolbar: GridToolbarColumnsButton,
-                // Toolbar: GridToolbarDensitySelector
-              }}
+              showToolbar
               onRowClick={(params) => handleOpenDetails(Number(params.id))}
               initialState={{
                 columns: {

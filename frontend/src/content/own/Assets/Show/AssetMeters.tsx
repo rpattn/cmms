@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
 import { GridRowParams, GridToolbar } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import { AssetDTO } from '../../../../models/owns/asset';
 import { useDispatch, useSelector } from '../../../../store';
 import { getMetersByAsset } from '../../../../slices/meter';
@@ -76,7 +76,7 @@ const AssetMeters = ({ asset }: PropsType) => {
   const onCreationFailure = (err) =>
     showSnackBar(t('reading_create_failure'), 'error');
 
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'value',
       headerName: t('reading'),

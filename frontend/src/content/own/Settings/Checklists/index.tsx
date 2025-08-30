@@ -1,14 +1,11 @@
 import { Box, Button, Grid } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import SettingsLayout from '../SettingsLayout';
 import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import {
   GridActionsCellItem,
   GridRenderCellParams,
-  GridRowParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridRowParams
 } from '@mui/x-data-grid';
 import { Checklist } from '../../../../models/owns/checklists';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
@@ -60,13 +57,13 @@ function Checklists() {
     dispatch(deleteChecklist(id)).then(onDeleteSuccess).catch(onDeleteFailure);
     setOpenDelete(false);
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<Checklist>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -132,9 +129,7 @@ function Checklists() {
                 columns={columns}
                 rows={checklists}
                 loading={loadingGet}
-                components={{
-                  Toolbar: GridToolbar
-                }}
+                showToolbar
                 onRowClick={(params: GridRowParams<Checklist>) => {
                   setCurrentChecklist(params.row);
                   setOpenEditChecklist(true);

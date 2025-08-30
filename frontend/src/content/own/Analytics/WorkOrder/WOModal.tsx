@@ -10,10 +10,10 @@ import type { CustomDatagridColumn } from '../../components/CustomDatagrid';
 import {
   GridRenderCellParams,
   GridToolbar,
-  GridValueGetterParams
+  
 } from '@mui/x-data-grid';
 import NoRowsMessageWrapper from '../../components/NoRowsMessageWrapper';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import PriorityWrapper from '../../components/PriorityWrapper';
 import { UserMiniDTO } from '../../../../models/user';
@@ -61,7 +61,7 @@ export default function WOModal({
       headerName: t('status'),
       description: t('status'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
         <Box display="flex" flexDirection="row" justifyContent="center">
           <CircleTwoToneIcon
             fontSize="small"
@@ -84,7 +84,7 @@ export default function WOModal({
       headerName: t('title'),
       description: t('title'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -94,7 +94,7 @@ export default function WOModal({
       headerName: t('priority'),
       description: t('priority'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
         <PriorityWrapper priority={params.value} />
       )
     },
@@ -197,7 +197,7 @@ export default function WOModal({
     }
   ];
 
-  const getColumns = (): GridEnrichedColDef[] => {
+  const getColumns = (): GridColDef[] => {
     let result = [...defaultColumns];
     result = defaultColumns.filter((column) => columns.includes(column.field));
     return result;

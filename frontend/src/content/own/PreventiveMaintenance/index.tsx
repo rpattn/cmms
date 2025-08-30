@@ -13,7 +13,6 @@ import {
   Typography
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import {
@@ -27,16 +26,14 @@ import {
 } from '../../../slices/preventiveMaintenance';
 import { useDispatch, useSelector } from '../../../store';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
   FilterField,
   SearchCriteria,
-  SearchOperator,
   SortDirection
 } from '../../../models/owns/page';
-import { GridRenderCellParams, GridValueGetterParams } from '@mui/x-data-grid';
+import { GridRenderCellParams,  } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import Form from '../components/form';
 import * as Yup from 'yup';
@@ -69,7 +66,6 @@ import { patchTasksOfPreventiveMaintenance } from '../../../slices/task';
 import EnumFilter from '../WorkOrders/Filters/EnumFilter';
 import SignalCellularAltTwoToneIcon from '@mui/icons-material/SignalCellularAltTwoTone';
 import SearchInput from '../components/SearchInput';
-import WorkOrder from '../../../models/owns/workOrder';
 
 function Files() {
   const { t }: { t: any } = useTranslation();
@@ -99,7 +95,7 @@ function Files() {
   const PM_GRID_STATE_KEY = 'pmCommunityGridState';
   type GridSavedState = {
     columnVisibilityModel?: any;
-    sortModel?: any[];
+    sortModel?: readonly any[];
     pageSize?: number;
     page?: number;
   };
@@ -268,7 +264,7 @@ function Files() {
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -277,7 +273,7 @@ function Files() {
       headerName: t('wo_title'),
       description: t('wo_title'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -287,7 +283,7 @@ function Files() {
       headerName: t('priority'),
       description: t('priority'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <PriorityWrapper priority={params.value} />
       )
     },

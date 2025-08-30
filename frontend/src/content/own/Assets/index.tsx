@@ -30,14 +30,10 @@ import * as React from 'react';
 import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
 import { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
-  GridEventListener,
-  GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridRenderCellParams,  
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import ExpandMore from '@mui/icons-material/ExpandMore';
@@ -300,7 +296,7 @@ function Assets() {
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<AssetRow, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -308,7 +304,7 @@ function Assets() {
       field: 'status',
       headerName: t('status'),
       description: t('status'),
-      renderCell: (params: GridRenderCellParams<AssetStatus>) => (
+      renderCell: (params: GridRenderCellParams<AssetRow, AssetStatus>) => (
         <AssetStatusTag status={params.value} />
       )
     },
@@ -797,7 +793,7 @@ useEffect(() => {
                           c.field === 'name'
                             ? {
                                 ...c,
-                                renderCell: (params: GridRenderCellParams<string, AssetRow>) => (
+                                renderCell: (params: GridRenderCellParams<AssetRow, string>) => (
                                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                     {params.row.hasChildren && (
                                       <IconButton

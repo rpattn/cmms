@@ -5,10 +5,10 @@ import gridLocaleText from './GridLocaleText';
 import useWindowDimensions from '../../../../hooks/useWindowDimensions';
 import { useEffect, useRef, useState } from 'react';
 import { UiConfiguration } from '../../../../models/owns/uiConfiguration';
-import type { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import type { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import useAuth from '../../../../hooks/useAuth';
 
-export type CustomDatagridColumn = GridEnrichedColDef & {
+export type CustomDatagridColumn = GridColDef & {
   uiConfigKey?: keyof Omit<UiConfiguration, 'id'>;
 };
 interface CustomDatagridProps extends DataGridProps {

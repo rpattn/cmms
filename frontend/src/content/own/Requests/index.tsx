@@ -26,12 +26,10 @@ import {
 } from '../../../slices/request';
 import { useDispatch, useSelector } from '../../../store';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
-  GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridRenderCellParams
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import Request from '../../../models/owns/request';
@@ -58,12 +56,10 @@ import {
 } from '../../../models/owns/page';
 // removed Pro grid apiRef and state persistence for community grid
 import _ from 'lodash';
-import FilterAltTwoToneIcon from '@mui/icons-material/FilterAltTwoTone';
 import EnumFilter from '../WorkOrders/Filters/EnumFilter';
 import SignalCellularAltTwoToneIcon from '@mui/icons-material/SignalCellularAltTwoTone';
 import CircleTwoToneIcon from '@mui/icons-material/CircleTwoTone';
 import SearchInput from '../components/SearchInput';
-import * as React from 'react';
 import WorkOrder from '../../../models/owns/workOrder';
 
 function Files() {
@@ -107,7 +103,7 @@ function Files() {
   const REQUEST_GRID_STATE_KEY = 'requestCommunityGridState';
   type GridSavedState = {
     columnVisibilityModel?: any;
-    sortModel?: any[];
+    sortModel?: readonly any[];
     pageSize?: number;
     page?: number;
   };
@@ -237,7 +233,7 @@ function Files() {
     newValues.category = formatSelect(newValues.category);
     return newValues;
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'customId',
       headerName: t('id'),
@@ -248,7 +244,7 @@ function Files() {
       headerName: t('title'),
       description: t('title'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -263,7 +259,7 @@ function Files() {
       headerName: t('priority'),
       description: t('priority'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <PriorityWrapper priority={params.value} />
       )
     },

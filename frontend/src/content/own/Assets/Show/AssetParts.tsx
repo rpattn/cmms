@@ -4,9 +4,8 @@ import CommunityDataGrid from '../../components/CustomDatagrid/CommunityDataGrid
 import {
   GridActionsCellItem,
   GridRowParams,
-  GridToolbar
 } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import { useNavigate } from 'react-router-dom';
 import { AssetDTO } from '../../../../models/owns/asset';
@@ -35,7 +34,7 @@ const AssetParts = ({ asset }: PropsType) => {
     }
   };
   const navigate = useNavigate();
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
@@ -82,9 +81,7 @@ const AssetParts = ({ asset }: PropsType) => {
               <CommunityDataGrid
                 columns={columns}
                 rows={asset?.parts ?? []}
-                components={{
-                  Toolbar: GridToolbar
-                }}
+                showToolbar
                 onRowClick={(params) => {
                   navigate(`/app/inventory/parts/${params.id}`);
                 }}

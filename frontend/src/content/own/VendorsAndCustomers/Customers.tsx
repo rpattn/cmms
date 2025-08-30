@@ -16,10 +16,8 @@ import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
-  GridEnrichedColDef,
-  GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridColDef,
+  GridRenderCellParams
 } from '@mui/x-data-grid';
 import {
   emailRegExp,
@@ -70,7 +68,7 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
   const CUSTOMER_GRID_STATE_KEY = 'customerCommunityGridState';
   type GridSavedState = {
     columnVisibilityModel?: any;
-    sortModel?: any[];
+    sortModel?: readonly any[];
     pageSize?: number;
     page?: number;
   };
@@ -327,13 +325,13 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
     email: Yup.string().matches(emailRegExp, t('invalid_email')).nullable()
   };
 
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('customer_name'),
       description: t('customer_name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },

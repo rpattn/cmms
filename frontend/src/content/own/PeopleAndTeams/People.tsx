@@ -13,11 +13,10 @@ import { useTranslation } from 'react-i18next';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
-  GridEnrichedColDef,
+  GridColDef,
   GridRenderCellParams,
   GridRowParams,
   GridToolbar,
-  GridValueGetterParams
 } from '@mui/x-data-grid';
 import * as React from 'react';
 import { useContext, useEffect, useMemo, useState } from 'react';
@@ -70,11 +69,11 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
   const [openDrawerFromUrl, setOpenDrawerFromUrl] = useState<boolean>(false);
   const PEOPLE_GRID_STATE_KEY = 'peopleCommunityGridState';
   type GridSavedState = {
-    columnVisibilityModel?: any;
-    sortModel?: any[];
-    pageSize?: number;
-    page?: number;
-  };
+      columnVisibilityModel?: any;
+      sortModel?: readonly any[];
+      pageSize?: number;
+      page?: number;
+    };
   const loadPeopleGridState = (): GridSavedState => {
     try {
       const raw = localStorage.getItem(PEOPLE_GRID_STATE_KEY);
@@ -299,13 +298,13 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
 
   // const shape = {};
 
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
       width: 150,
       valueGetter: (_value, row) => `${row.firstName} ${row.lastName}`,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },

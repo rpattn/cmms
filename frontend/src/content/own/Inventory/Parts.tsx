@@ -21,11 +21,9 @@ import {
 import { useTranslation } from 'react-i18next';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
-  GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
+  GridRenderCellParams
 } from '@mui/x-data-grid';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import Part from '../../../models/owns/part';
 import {
   addPart,
@@ -89,7 +87,7 @@ const Parts = ({ setAction }: PropsType) => {
   const PARTS_GRID_STATE_KEY = 'partsCommunityGridState';
   type GridSavedState = {
     columnVisibilityModel?: any;
-    sortModel?: any[];
+    sortModel?: readonly any[];
     pageSize?: number;
     page?: number;
   };
@@ -253,13 +251,13 @@ const Parts = ({ setAction }: PropsType) => {
     // values.files = formatSelect(values.files);
     return newValues;
   };
-  const columns: GridEnrichedColDef<Part>[] = [
+  const columns: GridColDef<Part>[] = [
     {
       field: 'name',
       headerName: t('name'),
       description: t('name'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<Part, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -276,7 +274,7 @@ const Parts = ({ setAction }: PropsType) => {
       headerName: t('quantity'),
       description: t('quantity'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<number, Part>) => (
+      renderCell: (params: GridRenderCellParams<Part, number>) => (
         <Box sx={params.value < params.row.minQuantity ? { color: 'red' } : {}}>
           {getFormattedQuantityWithUnit(params.value, params.row.unit)}{' '}
           {params.value < params.row.minQuantity && t('(Running Low !)')}
@@ -313,7 +311,7 @@ const Parts = ({ setAction }: PropsType) => {
       headerName: t('assigned_to'),
       description: t('assigned_to'),
       width: 170,
-      renderCell: (params: GridRenderCellParams<UserMiniDTO[]>) => (
+      renderCell: (params: GridRenderCellParams<Part, UserMiniDTO[]>) => (
         <UserAvatars users={params.value} />
       )
     },
