@@ -25,7 +25,8 @@ import PermissionErrorMessage from '../components/PermissionErrorMessage';
 import { useContext, useEffect, useState } from 'react';
 import FileUpload from '../components/FileUpload';
 import { TitleContext } from 'src/contexts/TitleContext';
-import { read, utils } from 'xlsx';
+import readXlsxFile from 'read-excel-file';
+import Papa from 'papaparse';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import Spreadsheet, { CellBase, Matrix } from 'react-spreadsheet';
 import { arrayToAoA } from 'src/utils/overall';
@@ -95,6 +96,8 @@ const Import = ({}: OwnProps) => {
     { label: t('parts'), value: 'parts' },
     { label: t('meters'), value: 'meters' }
   ];
+  const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+  const MAX_ROWS = 50000; // 50k rows (excluding header)
   useEffect(() => {
     setTitle(t('import'));
   }, []);
@@ -422,35 +425,83 @@ const Import = ({}: OwnProps) => {
                 multiple={false}
                 title={t('upload')}
                 type={'spreadsheet'}
-                description={t('upload')}
-                onDrop={(files: any) => {
+                description={`${t('upload')} - Supported: .xlsx, .csv, .tsv. Max 5 MB, 50,000 rows.`}
+                onDrop={async (files: any) => {
                   setLoading(true);
-                  var reader = new FileReader();
-                  reader.onload = function(e) {
-                    const data = e.target.result;
-                    const file = read(data, {
-                      type: 'string'
-                    });
-                    const sheet = file.Sheets[file.SheetNames[0]];
-                    const localJsonArray: string[][] = utils.sheet_to_json(
-                      sheet,
-                      { header: 1 }
-                    );
-                    const localJson = utils.sheet_to_json(sheet);
+                  try {
+                    const file: File = files[0];
+                    if (file.size > MAX_FILE_SIZE) {
+                      showSnackBar(`File too large. Max 5 MB allowed.`, 'error');
+                      setLoading(false);
+                      return;
+                    }
+                    const name = (file.name || '').toLowerCase();
+                    const isTSV = name.endsWith('.tsv');
+                    const isCSV = name.endsWith('.csv');
+                    const isXLSX = name.endsWith('.xlsx');
+
+                    let localJsonArray: string[][] = [];
+                    let localJson: any[] = [];
+
+                    if (isXLSX) {
+                      // Read XLSX into rows (AoA)
+                      const rows = await readXlsxFile(file, { sheet: 1 });
+                      localJsonArray = (rows as any[]).map((r) => r.map((c) => (c == null ? '' : String(c))));
+                      if (localJsonArray.length > 1) {
+                        const headers = localJsonArray[0] as string[];
+                        localJson = localJsonArray.slice(1).map((row) => {
+                          const obj: Record<string, any> = {};
+                          headers.forEach((h, i) => (obj[h] = row[i]));
+                          return obj;
+                        });
+                      }
+                    } else if (isCSV || isTSV) {
+                      const text = await file.text();
+                      const parsed = Papa.parse<string[]>(text, {
+                        delimiter: isTSV ? '\t' : ',',
+                        skipEmptyLines: true
+                      });
+                      if (parsed.errors?.length) {
+                        console.warn('CSV/TSV parse errors', parsed.errors);
+                      }
+                      localJsonArray = (parsed.data as any[]).map((r) => r.map((c) => (c == null ? '' : String(c))));
+                      if (localJsonArray.length > 1) {
+                        const headers = localJsonArray[0] as string[];
+                        localJson = localJsonArray.slice(1).map((row) => {
+                          const obj: Record<string, any> = {};
+                          headers.forEach((h, i) => (obj[h] = row[i]));
+                          return obj;
+                        });
+                      }
+                    } else {
+                      showSnackBar(t('unsupported_file_type'), 'error');
+                      setLoading(false);
+                      return;
+                    }
+
+                    // Row-count guard (exclude header)
+                    if (localJsonArray.length - 1 > MAX_ROWS) {
+                      showSnackBar(`Too many rows. Max 50,000 rows allowed.`, 'error');
+                      setLoading(false);
+                      return;
+                    }
+
                     setJsonData(localJson);
                     if (localJsonArray.length > 1) {
-                      setUserHeaders(localJsonArray[0]);
-                      const localObjectOfArrayOfArrays =
-                        arrayToAoA(localJsonArray);
+                      setUserHeaders(localJsonArray[0] as string[]);
+                      const localObjectOfArrayOfArrays = arrayToAoA(localJsonArray);
                       setSpreadSheetsConfig(localObjectOfArrayOfArrays);
                       setLoading(false);
                       handleNext();
                     } else {
                       showSnackBar(t('not_enough_rows'), 'error');
+                      setLoading(false);
                     }
-                    /* DO SOMETHING WITH workbook HERE */
-                  };
-                  reader.readAsText(files[0]);
+                  } catch (err) {
+                    console.error(err);
+                    showSnackBar(t('upload_failed'), 'error');
+                    setLoading(false);
+                  }
                 }}
               />
             )
