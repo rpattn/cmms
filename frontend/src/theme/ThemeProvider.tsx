@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ThemeProvider } from '@mui/material';
+import { ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
 import { themeCreator } from './base';
-import { StylesProvider } from '@mui/styles';
 import { CacheProvider } from '@emotion/react';
 import createCache from '@emotion/cache';
 import stylisRTLPlugin from 'stylis-plugin-rtl';
@@ -40,13 +39,13 @@ const ThemeProviderWrapper: React.FC = (props) => {
     </ThemeContext.Provider>
   );
   return (
-    <StylesProvider injectFirst>
+    <StyledEngineProvider injectFirst>
       {rtl ? (
         <CacheProvider value={cacheRtl}>{providers}</CacheProvider>
       ) : (
         providers
       )}
-    </StylesProvider>
+    </StyledEngineProvider>
   );
 };
 
