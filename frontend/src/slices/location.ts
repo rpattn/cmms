@@ -7,12 +7,13 @@ import Location, {
 } from '../models/owns/location';
 import api from '../utils/api';
 import { revertAll } from 'src/utils/redux';
-import { Pageable, pageableToQueryParams } from '../models/owns/page';
+import { Page, Pageable, pageableToQueryParams } from '../models/owns/page';
 
 interface LocationState {
   locations: Location[];
   locationsHierarchy: LocationRow[];
   locationsMini: LocationMiniDTO[];
+  locationsPage: Page<Location> | null;
   loadingGet: boolean;
 }
 
@@ -20,6 +21,7 @@ const initialState: LocationState = {
   locations: [],
   locationsHierarchy: [],
   locationsMini: [],
+  locationsPage: null,
   loadingGet: false
 };
 
@@ -34,6 +36,12 @@ const slice = createSlice({
     ) {
       const { locations } = action.payload;
       state.locations = locations;
+    },
+    setLocationsPage(
+      state: LocationState,
+      action: PayloadAction<{ page: Page<Location> }>
+    ) {
+      state.locationsPage = action.payload.page;
     },
     getLocationsMini(
       state: LocationState,
@@ -162,18 +170,46 @@ export const getLocationChildren =
   (id: number, parents: number[], pageable: Pageable): AppThunk =>
   async (dispatch) => {
     dispatch(slice.actions.setLoadingGet({ loading: true }));
-    const locations = await api.get<Location[]>(
-      `locations/children/${id}?${pageableToQueryParams(pageable)}`
-    );
-    dispatch(
-      slice.actions.getLocationChildren({
-        id,
-        locations: locations.map((location) => {
-          return { ...location, hierarchy: [...parents, location.id] };
-        })
-      })
-    );
-    dispatch(slice.actions.setLoadingGet({ loading: false }));
+    try {
+      if (id === 0) {
+        // Paginated root locations via search; only top-level (no parent)
+        const page = await api.post<Page<Location>>(
+          `locations/search`,
+          {
+            filterFields: [
+              { field: 'parentLocation', operation: 'nu', value: '' }
+            ],
+            pageNum: pageable.page,
+            pageSize: pageable.size
+          }
+        );
+        dispatch(slice.actions.setLocationsPage({ page }));
+        // reset current hierarchy when changing root page
+        dispatch(slice.actions.resetHierarchy({}));
+        const rows = page.content.map((location) => ({
+          ...location,
+          hierarchy: [...parents, location.id]
+        }));
+        dispatch(
+          slice.actions.getLocationChildren({ id, locations: rows })
+        );
+      } else {
+        const locations = await api.get<Location[]>(
+          `locations/children/${id}?${pageableToQueryParams(pageable)}`
+        );
+        dispatch(
+          slice.actions.getLocationChildren({
+            id,
+            locations: locations.map((location) => ({
+              ...location,
+              hierarchy: [...parents, location.id]
+            }))
+          })
+        );
+      }
+    } finally {
+      dispatch(slice.actions.setLoadingGet({ loading: false }));
+    }
   };
 
 export const resetLocationsHierarchy =

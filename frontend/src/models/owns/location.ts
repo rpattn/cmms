@@ -13,6 +13,7 @@ export default interface Location extends Audit {
   image: FileMiniDTO;
   files: FileMiniDTO[];
   latitude: number;
+  hasChildren?: boolean;
   parentLocation: LocationMiniDTO | null;
   vendors: VendorMiniDTO[];
   customers: CustomerMiniDTO[];

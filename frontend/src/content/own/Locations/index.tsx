@@ -85,7 +85,7 @@ function Locations() {
   const [openDelete, setOpenDelete] = useState<boolean>(false);
   // Map no longer requires an API key
 
-  const { locationsHierarchy, locations, loadingGet } = useSelector(
+  const { locationsHierarchy, locations, locationsPage, loadingGet } = useSelector(
     (state) => state.locations
   );
   const [deployedLocations, setDeployedLocations] = useState<
@@ -104,6 +104,8 @@ function Locations() {
     columnVisibilityModel?: any;
     expandedIds?: number[];
     tab?: string;
+    page?: number;
+    pageSize?: number;
   };
   const loadLocationsGridState = (): GridSavedState => {
     try {
@@ -158,8 +160,8 @@ function Locations() {
   const openMenu = Boolean(anchorEl);
   const navigate = useNavigate();
   const [pageable, setPageable] = useState<Pageable>({
-    page: 0,
-    size: 1000
+    page: savedLocationsState.page ?? 0,
+    size: savedLocationsState.pageSize ?? 20
   });
 
   const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -725,34 +727,36 @@ function Locations() {
                               ...c,
                               renderCell: (params: GridRenderCellParams<string, LocationRow>) => (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                  <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      const row = params.row as LocationRow;
-                                      setExpandedIds((prev) => {
-                                        const next = new Set(prev);
-                                        if (next.has(row.id)) next.delete(row.id);
-                                        else next.add(row.id);
-                                        saveLocationsGridState({ expandedIds: Array.from(next) });
-                                        return next;
-                                      });
-                                      // lazy-load children
-                                      const rowL = params.row as LocationRow;
-                                      if (!(rowL as any).childrenFetched) {
-                                        dispatch(
-                                          getLocationChildren(rowL.id, rowL.hierarchy, pageable)
-                                        );
-                                      }
-                                    }}
-                                    sx={{ mr: 1 }}
-                                  >
-                                    {expandedIds.has((params.row as LocationRow).id) ? (
-                                      <ExpandLess fontSize="inherit" />
-                                    ) : (
-                                      <ExpandMore fontSize="inherit" />
-                                    )}
-                                  </IconButton>
+                                  {(params.row as any).hasChildren && (
+                                    <IconButton
+                                      size="small"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const row = params.row as LocationRow;
+                                        setExpandedIds((prev) => {
+                                          const next = new Set(prev);
+                                          if (next.has(row.id)) next.delete(row.id);
+                                          else next.add(row.id);
+                                          saveLocationsGridState({ expandedIds: Array.from(next) });
+                                          return next;
+                                        });
+                                        // lazy-load children on first expand
+                                        const rowL = params.row as LocationRow;
+                                        if (!(rowL as any).childrenFetched) {
+                                          dispatch(
+                                            getLocationChildren(rowL.id, rowL.hierarchy, pageable)
+                                          );
+                                        }
+                                      }}
+                                      sx={{ mr: 1 }}
+                                    >
+                                      {expandedIds.has((params.row as LocationRow).id) ? (
+                                        <ExpandLess fontSize="inherit" />
+                                      ) : (
+                                        <ExpandMore fontSize="inherit" />
+                                      )}
+                                    </IconButton>
+                                  )}
                                   <Box sx={{ ml: ((params.row as LocationRow).hierarchy?.length || 1) - 1 }}>
                                     <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
                                   </Box>
@@ -796,8 +800,18 @@ function Locations() {
                     })()}
                     getRowId={(row) => row.id}
                     loading={loadingGet}
-                    hideFooterPagination
-                    hideFooterSelectedRowCount
+                    paginationMode={'server'}
+                    rowCount={locationsPage?.totalElements ?? 0}
+                    page={pageable.page}
+                    pageSize={pageable.size}
+                    onPageChange={(page) => {
+                      saveLocationsGridState({ page });
+                      setPageable((prev) => ({ ...prev, page }));
+                    }}
+                    onPageSizeChange={(size) => {
+                      saveLocationsGridState({ pageSize: size });
+                      setPageable((prev) => ({ ...prev, size }));
+                    }}
                     components={{
                       NoRowsOverlay: () => (
                         <NoRowsMessageWrapper
