@@ -272,20 +272,15 @@ function Files() {
       headerName: t('status'),
       description: t('status'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, Request>) =>
-        params.row.cancelled
-          ? t('rejected')
-          : params.row.workOrder
-          ? t('approved')
-          : t('pending')
+      valueGetter: (_value: null, row: Request) =>
+        row.cancelled ? t('rejected') : row.workOrder ? t('approved') : t('pending')
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, Request>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     }
   ];
   // Pro-only grid api/state removed in community build
@@ -572,21 +567,22 @@ function Files() {
                 <CommunityDataGrid
                   columns={columns}
                   loading={loadingGet}
-                  pageSize={criteria.pageSize}
-                  page={criteria.pageNum}
+                  paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                   rows={requests.content}
                   rowCount={requests.totalElements}
                   pagination
                   paginationMode="server"
-                  onPageSizeChange={(size) => {
-                    saveRequestGridState({ pageSize: size });
-                    onPageSizeChange(size);
+                  onPaginationModelChange={(model) => {
+                    if (model.pageSize !== criteria.pageSize) {
+                      saveRequestGridState({ pageSize: model.pageSize });
+                      onPageSizeChange(model.pageSize);
+                    }
+                    if (model.page !== criteria.pageNum) {
+                      saveRequestGridState({ page: model.page });
+                      onPageChange(model.page);
+                    }
                   }}
-                  onPageChange={(page) => {
-                    saveRequestGridState({ page });
-                    onPageChange(page);
-                  }}
-                  rowsPerPageOptions={[10, 20, 50]}
+                  pageSizeOptions={[10, 20, 50]}
                   onRowClick={({ id }) => handleOpenDetails(Number(id))}
                   components={{
                     NoRowsOverlay: () => (

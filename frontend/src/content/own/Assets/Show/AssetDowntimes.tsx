@@ -109,16 +109,14 @@ const AssetDowntimes = ({ asset }: PropsType) => {
       headerName: t('duration'),
       description: t('duration'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<number>) =>
-        getHMSString(params.value)
+      valueGetter: (value: number | null) => getHMSString(value)
     },
     {
       field: 'startsOn',
       headerName: t('started_on'),
       description: t('started_on'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'actions',

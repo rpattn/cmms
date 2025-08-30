@@ -267,12 +267,8 @@ const Parts = ({ setAction }: PropsType) => {
       field: 'cost',
       headerName: t('cost'),
       description: t('cost'),
-      valueGetter: (params) =>
-        getFormattedCostPerUnit(
-          params.value,
-          params.row.unit,
-          getFormattedCurrency
-        ),
+      valueGetter: (value, row) =>
+        getFormattedCostPerUnit(value, row.unit, getFormattedCurrency),
       width: 150
     },
     {
@@ -303,8 +299,7 @@ const Parts = ({ setAction }: PropsType) => {
       field: 'category',
       headerName: t('category'),
       description: t('category'),
-      valueGetter: (params: GridValueGetterParams<CategoryMiniDTO>) =>
-        params.value?.name,
+      valueGetter: (value: CategoryMiniDTO | null) => value?.name ?? null,
       width: 150
     },
     {
@@ -327,8 +322,7 @@ const Parts = ({ setAction }: PropsType) => {
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'openWorkOrders',
@@ -720,22 +714,23 @@ const Parts = ({ setAction }: PropsType) => {
       {currentTab === 'list' && (
         <CommunityDataGrid
           columns={columns}
-          pageSize={criteria.pageSize}
-          page={criteria.pageNum}
+          paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
           rows={parts.content}
           rowCount={parts.totalElements}
           pagination
           paginationMode="server"
           sortingMode="server"
-          onPageSizeChange={(size) => {
-            savePartsGridState({ pageSize: size });
-            onPageSizeChange(size);
+          onPaginationModelChange={(model) => {
+            if (model.pageSize !== criteria.pageSize) {
+              savePartsGridState({ pageSize: model.pageSize });
+              onPageSizeChange(model.pageSize);
+            }
+            if (model.page !== criteria.pageNum) {
+              savePartsGridState({ page: model.page });
+              onPageChange(model.page);
+            }
           }}
-          onPageChange={(page) => {
-            savePartsGridState({ page });
-            onPageChange(page);
-          }}
-          rowsPerPageOptions={[10, 20, 50]}
+          pageSizeOptions={[10, 20, 50]}
           loading={loadingGet}
           onSortModelChange={(model) => {
             savePartsGridState({ sortModel: model });

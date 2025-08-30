@@ -433,8 +433,7 @@ function WorkOrders() {
       headerName: t('location_name'),
       description: t('location_name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<LocationMiniDTO>) =>
-        params.value?.name,
+      valueGetter: (value: LocationMiniDTO | null) => value?.name ?? null,
       uiConfigKey: 'locations'
     },
     {
@@ -442,8 +441,7 @@ function WorkOrders() {
       headerName: t('location_address'),
       description: t('location_address'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        params.row.location?.address,
+      valueGetter: (_value: null, row: WorkOrder) => row.location?.address,
       uiConfigKey: 'locations'
     },
     {
@@ -451,64 +449,58 @@ function WorkOrders() {
       headerName: t('category'),
       description: t('category'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Category>) =>
-        params.value?.name
+      valueGetter: (value: Category | null) => value?.name ?? null
     },
     {
       field: 'asset',
       headerName: t('asset_name'),
       description: t('asset_name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<AssetMiniDTO>) =>
-        params.value?.name
+      valueGetter: (value: AssetMiniDTO | null) => value?.name ?? null
     },
     {
       field: 'daysSinceCreated',
       headerName: t('days_since_creation'),
       description: t('days_since_creation'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        dayDiff(new Date(), new Date(params.row.createdAt))
+      valueGetter: (_value: null, row: WorkOrder) =>
+        dayDiff(new Date(), new Date(row.createdAt))
     },
     {
       field: 'files',
       headerName: t('files'),
       description: t('files'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<File[]>) =>
-        params.value.length
+      valueGetter: (value: File[] | null) => (value ? value.length : 0)
     },
     {
       field: 'requestedBy',
       headerName: t('requested_by'),
       description: t('requested_by'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        getUserNameById(params.row.parentRequest?.createdBy)
+      valueGetter: (_value: null, row: WorkOrder) =>
+        getUserNameById(row.parentRequest?.createdBy)
     },
     {
       field: 'completedOn',
       headerName: t('completed_on'),
       description: t('completed_on'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'updatedAt',
       headerName: t('updated_at'),
       description: t('updated_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     }
   ];
   // dataGrid state
@@ -985,8 +977,7 @@ function WorkOrders() {
             <Box sx={{ width: '95%' }}>
               {currentTab === 'list' ? (
                 <CommunityDataGrid
-                  pageSize={criteria.pageSize}
-                  page={criteria.pageNum}
+                  paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                   columns={columns}
                   rows={workOrders.content}
                   rowCount={workOrders.totalElements}
@@ -1023,9 +1014,11 @@ function WorkOrders() {
                         'ASC') as SortDirection
                     });
                   }}
-                  onPageSizeChange={onPageSizeChange}
-                  onPageChange={onPageChange}
-                  rowsPerPageOptions={[10, 20, 50]}
+                  onPaginationModelChange={(model) => {
+                    if (model.pageSize !== criteria.pageSize) onPageSizeChange(model.pageSize);
+                    if (model.page !== criteria.pageNum) onPageChange(model.page);
+                  }}
+                  pageSizeOptions={[10, 20, 50]}
                   components={{
                     NoRowsOverlay: () => (
                       <NoRowsMessageWrapper

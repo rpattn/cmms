@@ -29,6 +29,7 @@ function CustomDataGrid(props: CustomDatagridProps) {
       const viewportOffset = tableRef.current.getBoundingClientRect();
       // these are relative to the viewport, i.e. the window
       const top = viewportOffset.top;
+      console.log(height - top - 15)
       return height - top - 15;
     }
     return 500;
@@ -60,23 +61,30 @@ function CustomDataGrid(props: CustomDatagridProps) {
             cursor: props.notClickable ? 'auto' : 'pointer'
           }
         }}
-        components={{
-          NoRowsOverlay: () => (
-            <Stack height="100%" alignItems="center" justifyContent="center">
-              <Typography variant="h3">{t('no_content')}</Typography>
-            </Stack>
-          ),
-          NoResultsOverlay: () => (
-            <Stack height="100%" alignItems="center" justifyContent="center">
-              <Typography variant="h3">{t('no_result_criteria')}</Typography>
-            </Stack>
-          )
+        // Normalize deprecated `components/componentsProps` to `slots/slotProps`
+        slots={{
+          ...((props as any).slots ?? (props as any).components),
+          noRowsOverlay:
+            ((props as any).slots ?? (props as any).components)?.noRowsOverlay ??
+            (() => (
+              <Stack height="100%" alignItems="center" justifyContent="center">
+                <Typography variant="h3">{t('no_content')}</Typography>
+              </Stack>
+            )),
+          noResultsOverlay:
+            ((props as any).slots ?? (props as any).components)?.noResultsOverlay ??
+            (() => (
+              <Stack height="100%" alignItems="center" justifyContent="center">
+                <Typography variant="h3">{t('no_result_criteria')}</Typography>
+              </Stack>
+            ))
         }}
+        slotProps={(props as any).slotProps ?? (props as any).componentsProps}
         {...props}
         columns={props.columns.filter((col) =>
           col.uiConfigKey ? user.uiConfiguration[col.uiConfigKey] : true
         )}
-        disableSelectionOnClick
+        disableRowSelectionOnClick
         localeText={translatedGridLocaleText}
       />
     </div>

@@ -302,13 +302,11 @@ function Files() {
       headerName: t('next_wo'),
       description: t('next_wo'),
       width: 150,
-      valueGetter: (
-        params: GridValueGetterParams<null, PreventiveMaintenance>
-      ) =>
+      valueGetter: (_value: null, row: PreventiveMaintenance) =>
         getFormattedDate(
           getNextOccurence(
-            new Date(params.row.schedule?.startsOn),
-            params.row.schedule.frequency
+            new Date(row.schedule?.startsOn),
+            row.schedule.frequency
           ).toString()
         )
     },
@@ -334,8 +332,7 @@ function Files() {
       headerName: t('location_name'),
       description: t('location_name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<LocationMiniDTO>) =>
-        params.value?.name,
+      valueGetter: (value: LocationMiniDTO | null) => value?.name ?? null,
       uiConfigKey: 'locations'
     },
     {
@@ -343,16 +340,14 @@ function Files() {
       headerName: t('category'),
       description: t('category'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Category>) =>
-        params.value?.name
+      valueGetter: (value: Category | null) => value?.name ?? null
     },
     {
       field: 'asset',
       headerName: t('asset_name'),
       description: t('asset_name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<AssetMiniDTO>) =>
-        params.value?.name
+      valueGetter: (value: AssetMiniDTO | null) => value?.name ?? null
     }
   ];
   // Pro-only api removed in community build
@@ -664,8 +659,7 @@ function Files() {
                 <CommunityDataGrid
                   columns={columns}
                   loading={loadingGet}
-                  pageSize={criteria.pageSize}
-                  page={criteria.pageNum}
+                  paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                   rows={preventiveMaintenances.content}
                   rowCount={preventiveMaintenances.totalElements}
                   pagination
@@ -704,18 +698,20 @@ function Files() {
                       sortModel: savedPmState.sortModel || []
                     }
                   }}
-                  onPageSizeChange={(size) => {
-                    savePmGridState({ pageSize: size });
-                    onPageSizeChange(size);
-                  }}
-                  onPageChange={(page) => {
-                    savePmGridState({ page });
-                    onPageChange(page);
+                  onPaginationModelChange={(model) => {
+                    if (model.pageSize !== criteria.pageSize) {
+                      savePmGridState({ pageSize: model.pageSize });
+                      onPageSizeChange(model.pageSize);
+                    }
+                    if (model.page !== criteria.pageNum) {
+                      savePmGridState({ page: model.page });
+                      onPageChange(model.page);
+                    }
                   }}
                   onColumnVisibilityModelChange={(model) =>
                     savePmGridState({ columnVisibilityModel: model })
                   }
-                  rowsPerPageOptions={[10, 20, 50]}
+                  pageSizeOptions={[10, 20, 50]}
                   onRowClick={({ id }) => handleOpenDetails(Number(id))}
                   components={{
                     NoRowsOverlay: () => (

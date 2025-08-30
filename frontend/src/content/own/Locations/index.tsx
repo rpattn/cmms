@@ -284,8 +284,7 @@ function Locations() {
       headerName: t('created_at'),
       description: t('created_at'),
       flex: 0.5,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'customId',
@@ -800,18 +799,21 @@ function Locations() {
                     })()}
                     getRowId={(row) => row.id}
                     loading={loadingGet}
+                    pagination
                     paginationMode={'server'}
                     rowCount={locationsPage?.totalElements ?? 0}
-                    page={pageable.page}
-                    pageSize={pageable.size}
-                    onPageChange={(page) => {
-                      saveLocationsGridState({ page });
-                      setPageable((prev) => ({ ...prev, page }));
+                    paginationModel={{ page: pageable.page, pageSize: pageable.size }}
+                    onPaginationModelChange={(model) => {
+                      if (model.page !== pageable.page) {
+                        saveLocationsGridState({ page: model.page });
+                        setPageable((prev) => ({ ...prev, page: model.page }));
+                      }
+                      if (model.pageSize !== pageable.size) {
+                        saveLocationsGridState({ pageSize: model.pageSize });
+                        setPageable((prev) => ({ ...prev, size: model.pageSize }));
+                      }
                     }}
-                    onPageSizeChange={(size) => {
-                      saveLocationsGridState({ pageSize: size });
-                      setPageable((prev) => ({ ...prev, size }));
-                    }}
+                    pageSizeOptions={[10, 20, 50]}
                     components={{
                       NoRowsOverlay: () => (
                         <NoRowsMessageWrapper

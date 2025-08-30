@@ -319,8 +319,7 @@ function Assets() {
       description: t('location'),
       width: 150,
       uiConfigKey: 'locations',
-      valueGetter: (params: GridValueGetterParams<LocationMiniDTO>) =>
-        params.value?.name
+      valueGetter: (value: LocationMiniDTO | null) => value?.name ?? null
     },
     {
       field: 'image',
@@ -355,8 +354,7 @@ function Assets() {
       headerName: t('category'),
       description: t('category'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Category>) =>
-        params.value?.name
+      valueGetter: (value: Category | null) => value?.name ?? null
     },
     {
       field: 'description',
@@ -369,10 +367,8 @@ function Assets() {
       headerName: t('primary_worker'),
       description: t('primary_worker'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<UserMiniDTO>) =>
-        params.value
-          ? `${params.value.firstName} ${params.value.lastName}`
-          : null
+      valueGetter: (value: UserMiniDTO | null) =>
+        value ? `${value.firstName} ${value.lastName}` : null
     },
     {
       field: 'assignedTo',
@@ -388,16 +384,16 @@ function Assets() {
       headerName: t('teams'),
       description: t('teams'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<TeamMiniDTO[]>) =>
-        enumerate(params.value?.map((team) => team.name) ?? [])
+      valueGetter: (value: TeamMiniDTO[] | null) =>
+        enumerate(value?.map((team) => team.name) ?? [])
     },
     {
       field: 'vendors',
       headerName: t('vendors'),
       description: t('vendors'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<VendorMiniDTO[]>) =>
-        enumerate(params.value?.map((vendor) => vendor.companyName) ?? []),
+      valueGetter: (value: VendorMiniDTO[] | null) =>
+        enumerate(value?.map((vendor) => vendor.companyName) ?? []),
       uiConfigKey: 'vendorsAndCustomers'
     },
     {
@@ -405,16 +401,14 @@ function Assets() {
       headerName: t('parent_asset'),
       description: t('parent_asset'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<AssetMiniDTO>) =>
-        params.value?.name
+      valueGetter: (value: AssetMiniDTO | null) => value?.name ?? null
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     }
   ];
   // useGridStatePersist removed (Pro-only). Consider model-based persistence if needed.
@@ -873,17 +867,21 @@ useEffect(() => {
                   loading={loadingGet}
                   paginationMode={'server'}
                   rowCount={assets.totalElements}
-                  page={view === 'hierarchy' ? pageable.page : criteria.pageNum}
-                  pageSize={view === 'hierarchy' ? pageable.size : criteria.pageSize}
-                  onPageSizeChange={(size) => {
-                    saveAssetGridState({ pageSize: size });
-                    onPageSizeChange(size);
+                  paginationModel={{
+                    page: view === 'hierarchy' ? pageable.page : criteria.pageNum,
+                    pageSize: view === 'hierarchy' ? pageable.size : criteria.pageSize
                   }}
-                  onPageChange={(page) => {
-                    saveAssetGridState({ page });
-                    onPageChange(page);
+                  onPaginationModelChange={(model) => {
+                    if (model.pageSize !== (view === 'hierarchy' ? pageable.size : criteria.pageSize)) {
+                      saveAssetGridState({ pageSize: model.pageSize });
+                      onPageSizeChange(model.pageSize);
+                    }
+                    if (model.page !== (view === 'hierarchy' ? pageable.page : criteria.pageNum)) {
+                      saveAssetGridState({ page: model.page });
+                      onPageChange(model.page);
+                    }
                   }}
-                  rowsPerPageOptions={[10, 20, 50]}
+                  pageSizeOptions={[10, 20, 50]}
                   components={{
                     NoRowsOverlay: () => (
                       <NoRowsMessageWrapper

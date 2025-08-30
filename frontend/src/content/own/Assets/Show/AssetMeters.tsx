@@ -82,21 +82,21 @@ const AssetMeters = ({ asset }: PropsType) => {
       headerName: t('reading'),
       description: t('reading'),
       width: 150,
-      valueGetter: (params) => `${params.value} ${selectedMeter.unit}`
+      valueGetter: (value) => (value != null ? `${value} ${selectedMeter.unit}` : '')
     },
     {
       field: 'createdAt',
       headerName: t('date'),
       description: t('date'),
       width: 150,
-      valueGetter: (params) => getFormattedDate(params.value)
+      valueGetter: (value) => getFormattedDate(value)
     },
     {
       field: 'createdBy',
       headerName: t('added_by'),
       description: t('added_by'),
       width: 150,
-      valueGetter: (params) => getUserNameById(params.value)
+      valueGetter: (value) => getUserNameById(value)
     }
   ];
   const fields: Array<IField> = [
@@ -199,9 +199,7 @@ const AssetMeters = ({ asset }: PropsType) => {
               <CommunityDataGrid
                 columns={columns}
                 rows={readings}
-                components={{
-                  Toolbar: GridToolbar
-                }}
+                slots={{ toolbar: GridToolbar }}
                 loading={loadingGet}
                 onRowClick={(params: GridRowParams<Meter>) => null}
                 initialState={{

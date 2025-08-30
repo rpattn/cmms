@@ -234,17 +234,16 @@ function PurchaseOrders() {
       headerName: t('number_of_items'),
       description: t('number_of_items'),
       width: 150,
-      valueGetter: (params: GridRenderCellParams<null, PurchaseOrder>) =>
-        params.row.partQuantities.length
+      valueGetter: (_value: null, row: PurchaseOrder) => row.partQuantities.length
     },
     {
       field: 'totalCost',
       headerName: t('total_cost'),
       description: t('total_cost'),
       width: 150,
-      valueGetter: (params: GridRenderCellParams<null, PurchaseOrder>) =>
+      valueGetter: (_value: null, row: PurchaseOrder) =>
         getFormattedCurrency(
-          params.row.partQuantities.reduce((acc, partQuantity) => {
+          row.partQuantities.reduce((acc, partQuantity) => {
             return acc + partQuantity.part.cost * partQuantity.quantity;
           }, 0)
         )
@@ -254,8 +253,8 @@ function PurchaseOrders() {
       headerName: t('total_quantity'),
       description: t('total_quantity'),
       width: 150,
-      valueGetter: (params: GridRenderCellParams<null, PurchaseOrder>) =>
-        params.row.partQuantities.reduce((acc, partQuantity) => {
+      valueGetter: (_value: null, row: PurchaseOrder) =>
+        row.partQuantities.reduce((acc, partQuantity) => {
           return acc + partQuantity.quantity;
         }, 0)
     },
@@ -264,15 +263,14 @@ function PurchaseOrders() {
       headerName: t('category'),
       description: t('category'),
       width: 150,
-      valueGetter: (params: GridRenderCellParams<Category>) =>
-        params.value?.name
+      valueGetter: (value: Category | null) => value?.name ?? null
     },
     {
       field: 'status',
       headerName: t('status'),
       description: t('status'),
       width: 150,
-      valueGetter: (params: GridRenderCellParams<string>) => t(params.value)
+      valueGetter: (value: string | null) => t(value as any)
     },
     {
       field: 'shippingShipToName',
@@ -297,14 +295,14 @@ function PurchaseOrders() {
       headerName: t('created_by'),
       description: t('created_by'),
       width: 150,
-      valueGetter: (params) => getUserNameById(params.value)
+      valueGetter: (value) => getUserNameById(value)
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params) => getFormattedDate(params.row.createdAt)
+      valueGetter: (_value, row) => getFormattedDate(row.createdAt)
     }
   ];
   const fields: Array<IField> = [
@@ -590,21 +588,22 @@ function PurchaseOrders() {
                 <Box sx={{ width: '95%' }}>
                   <CommunityDataGrid
                     columns={columns}
-                    pageSize={criteria.pageSize}
-                    page={criteria.pageNum}
+                    paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                     rows={purchaseOrders.content}
                     rowCount={purchaseOrders.totalElements}
                     pagination
                     paginationMode="server"
-                    onPageSizeChange={(size) => {
-                      savePoGridState({ pageSize: size });
-                      onPageSizeChange(size);
+                    onPaginationModelChange={(model) => {
+                      if (model.pageSize !== criteria.pageSize) {
+                        savePoGridState({ pageSize: model.pageSize });
+                        onPageSizeChange(model.pageSize);
+                      }
+                      if (model.page !== criteria.pageNum) {
+                        savePoGridState({ page: model.page });
+                        onPageChange(model.page);
+                      }
                     }}
-                    onPageChange={(page) => {
-                      savePoGridState({ page });
-                      onPageChange(page);
-                    }}
-                    rowsPerPageOptions={[10, 20, 50]}
+                    pageSizeOptions={[10, 20, 50]}
                     loading={loadingGet}
                     components={{
 

@@ -218,14 +218,14 @@ function Files() {
       description: t('uploaded_by'),
       width: 150,
       flex: 1,
-      valueGetter: (params) => getUserNameById(params.value)
+      valueGetter: (value) => getUserNameById(value)
     },
     {
       field: 'createdAt',
       headerName: t('uploaded_on'),
       description: t('uploaded_on'),
       width: 150,
-      valueGetter: (params) => getFormattedDate(params.row.createdAt)
+      valueGetter: (_value, row) => getFormattedDate(row.createdAt)
     },
     {
       field: 'actions',
@@ -388,21 +388,22 @@ function Files() {
                 <Box sx={{ width: '95%' }}>
                   <CommunityDataGrid
                     columns={columns}
-                    pageSize={criteria.pageSize}
-                    page={criteria.pageNum}
+                    paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                     rows={files.content}
                     rowCount={files.totalElements}
                     pagination
                     paginationMode="server"
-                    onPageSizeChange={(size) => {
-                      saveFilesGridState({ pageSize: size });
-                      onPageSizeChange(size);
+                    onPaginationModelChange={(model) => {
+                      if (model.pageSize !== criteria.pageSize) {
+                        saveFilesGridState({ pageSize: model.pageSize });
+                        onPageSizeChange(model.pageSize);
+                      }
+                      if (model.page !== criteria.pageNum) {
+                        saveFilesGridState({ page: model.page });
+                        onPageChange(model.page);
+                      }
                     }}
-                    onPageChange={(page) => {
-                      saveFilesGridState({ page });
-                      onPageChange(page);
-                    }}
-                    rowsPerPageOptions={[10, 20, 50]}
+                    pageSizeOptions={[10, 20, 50]}
                     loading={loadingGet}
                     components={{
                       NoRowsOverlay: () => (

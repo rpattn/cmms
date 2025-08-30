@@ -304,7 +304,7 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
       field: 'name',
       headerName: t('name'),
       width: 150,
-      valueGetter: (params) => `${params.row.firstName} ${params.row.lastName}`,
+      valueGetter: (_value, row) => `${row.firstName} ${row.lastName}`,
       renderCell: (params: GridRenderCellParams<string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
@@ -328,24 +328,20 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
       field: 'role',
       headerName: t('role'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Role>) =>
-        params.value.code === 'USER_CREATED'
-          ? params.value.name
-          : t(`${params.value.code}_name`)
+      valueGetter: (value: Role | null) =>
+        value?.code === 'USER_CREATED' ? value.name : t(`${value?.code}_name`),
     },
     {
       field: 'rate',
       headerName: t('hourly_rate'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<number>) =>
-        getFormattedCurrency(params.value)
+      valueGetter: (value: number | null) => getFormattedCurrency(value)
     },
     {
       field: 'lastLogin',
       headerName: t('last_login'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'actions',
@@ -397,22 +393,23 @@ const People = ({ openModal, handleCloseModal }: PropsType) => {
 
   const RenderPeopleList = () => (
     <CommunityDataGrid
-      pageSize={criteria.pageSize}
-      page={criteria.pageNum}
+      paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
       rows={users.content}
       rowCount={users.totalElements}
       pagination
       paginationMode="server"
       sortingMode="server"
-      onPageSizeChange={(size) => {
-        savePeopleGridState({ pageSize: size });
-        onPageSizeChange(size);
+      onPaginationModelChange={(model) => {
+        if (model.pageSize !== criteria.pageSize) {
+          savePeopleGridState({ pageSize: model.pageSize });
+          onPageSizeChange(model.pageSize);
+        }
+        if (model.page !== criteria.pageNum) {
+          savePeopleGridState({ page: model.page });
+          onPageChange(model.page);
+        }
       }}
-      onPageChange={(page) => {
-        savePeopleGridState({ page });
-        onPageChange(page);
-      }}
-      rowsPerPageOptions={[10, 20, 50]}
+      pageSizeOptions={[10, 20, 50]}
       loading={loadingGet}
       onSortModelChange={(model) => {
         savePeopleGridState({ sortModel: model });

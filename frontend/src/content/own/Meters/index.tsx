@@ -284,15 +284,14 @@ function Meters() {
       headerName: t('last_reading'),
       description: t('last_reading'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'location',
       headerName: t('location'),
       description: t('location'),
       width: 150,
-      valueGetter: (params) => params.row.location?.name,
+      valueGetter: (_value, row) => row.location?.name,
       uiConfigKey: 'locations'
     },
     {
@@ -300,22 +299,21 @@ function Meters() {
       headerName: t('asset'),
       description: t('asset'),
       width: 150,
-      valueGetter: (params) => params.row.asset.name
+      valueGetter: (_value, row) => row.asset.name
     },
     {
       field: 'createdBy',
       headerName: t('created_by'),
       description: t('created_by'),
       width: 150,
-      valueGetter: (params) => getUserNameById(params.value)
+      valueGetter: (value) => getUserNameById(value)
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     }
   ];
   // Pro-only api removed in community build
@@ -618,22 +616,23 @@ function Meters() {
                   <CommunityDataGrid
                     columns={columns}
                     loading={loadingGet}
-                    pageSize={criteria.pageSize}
-                    page={criteria.pageNum}
+                    paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
                     rows={meters.content}
                     rowCount={meters.totalElements}
                     pagination
                     paginationMode="server"
                     sortingMode="server"
-                    onPageSizeChange={(size) => {
-                      saveMetersGridState({ pageSize: size });
-                      onPageSizeChange(size);
+                    onPaginationModelChange={(model) => {
+                      if (model.pageSize !== criteria.pageSize) {
+                        saveMetersGridState({ pageSize: model.pageSize });
+                        onPageSizeChange(model.pageSize);
+                      }
+                      if (model.page !== criteria.pageNum) {
+                        saveMetersGridState({ page: model.page });
+                        onPageChange(model.page);
+                      }
                     }}
-                    onPageChange={(page) => {
-                      saveMetersGridState({ page });
-                      onPageChange(page);
-                    }}
-                    rowsPerPageOptions={[10, 20, 50]}
+                    pageSizeOptions={[10, 20, 50]}
                     onSortModelChange={(model) => {
                       saveMetersGridState({ sortModel: model });
                       if (model.length === 0) {

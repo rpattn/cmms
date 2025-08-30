@@ -396,8 +396,7 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
       headerName: t('currency'),
       description: t('currency'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Currency>) =>
-        params.value?.name
+      valueGetter: (value: Currency | null) => value?.name ?? null
     }
   ];
   // Pro-only grid api removed for community DataGrid
@@ -449,20 +448,21 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
       }}
     >
 <CommunityDataGrid
-        pageSize={criteria.pageSize}
-        page={criteria.pageNum}
+        paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
         rows={customers.content}
         rowCount={customers.totalElements}
         pagination
         paginationMode="server"
         sortingMode="server"
-        onPageSizeChange={(size) => {
-          saveCustomerGridState({ pageSize: size });
-          onPageSizeChange(size);
-        }}
-        onPageChange={(page) => {
-          saveCustomerGridState({ page });
-          onPageChange(page);
+        onPaginationModelChange={(model) => {
+          if (model.pageSize !== criteria.pageSize) {
+            saveCustomerGridState({ pageSize: model.pageSize });
+            onPageSizeChange(model.pageSize);
+          }
+          if (model.page !== criteria.pageNum) {
+            saveCustomerGridState({ page: model.page });
+            onPageChange(model.page);
+          }
         }}
         onSortModelChange={(model) => {
           saveCustomerGridState({ sortModel: model });
@@ -496,7 +496,7 @@ const Customers = ({ openModal, handleCloseModal }: PropsType) => {
             direction: (model[0].sort?.toUpperCase() || 'ASC') as SortDirection
           });
         }}
-        rowsPerPageOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 20, 50]}
         columns={columns}
         loading={loadingGet}
         components={{

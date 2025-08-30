@@ -126,8 +126,7 @@ export default function WOModal({
       headerName: t('Location name'),
       description: t('Location name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<LocationMiniDTO>) =>
-        params.value?.name,
+      valueGetter: (value: LocationMiniDTO | null) => value?.name ?? null,
       uiConfigKey: 'locations'
     },
     {
@@ -135,8 +134,7 @@ export default function WOModal({
       headerName: t('Location address'),
       description: t('Location address'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        params.row.location?.address,
+      valueGetter: (_value: null, row: WorkOrder) => row.location?.address,
       uiConfigKey: 'locations'
     },
     {
@@ -144,64 +142,58 @@ export default function WOModal({
       headerName: t('category'),
       description: t('category'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<Category>) =>
-        params.value?.name
+      valueGetter: (value: Category | null) => value?.name ?? null
     },
     {
       field: 'asset',
       headerName: t('Asset name'),
       description: t('Asset name'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<AssetMiniDTO>) =>
-        params.value?.name
+      valueGetter: (value: AssetMiniDTO | null) => value?.name ?? null
     },
     {
       field: 'daysSinceCreated',
       headerName: t('Days since creation'),
       description: t('Days since creation'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        dayDiff(new Date(), new Date(params.row.createdAt))
+      valueGetter: (_value: null, row: WorkOrder) =>
+        dayDiff(new Date(), new Date(row.createdAt))
     },
     {
       field: 'files',
       headerName: t('files'),
       description: t('files'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<File[]>) =>
-        params.value.length
+      valueGetter: (value: File[] | null) => (value ? value.length : 0)
     },
     {
       field: 'requestedBy',
       headerName: t('Requested By'),
       description: t('Requested By'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<null, WorkOrder>) =>
-        getUserNameById(params.row.parentRequest?.createdBy)
+      valueGetter: (_value: null, row: WorkOrder) =>
+        getUserNameById(row.parentRequest?.createdBy)
     },
     {
       field: 'completedOn',
       headerName: t('Completed On'),
       description: t('Completed On'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'updatedAt',
       headerName: t('updated_at'),
       description: t('updated_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       width: 150,
-      valueGetter: (params: GridValueGetterParams<string>) =>
-        getFormattedDate(params.value)
+      valueGetter: (value: string | null) => getFormattedDate(value)
     }
   ];
 

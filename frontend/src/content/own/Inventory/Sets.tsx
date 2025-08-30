@@ -123,23 +123,22 @@ const Sets = ({ setAction }: PropsType) => {
       headerName: t('parts'),
       description: t('parts'),
       flex: 1,
-      valueGetter: (params: GridValueGetterParams<Part[]>) =>
-        params.value.length
+      valueGetter: (value: Part[] | null) => (value ? value.length : 0)
     },
     {
       field: 'cost',
       headerName: t('total_cost'),
       description: t('total_cost'),
       flex: 1,
-      valueGetter: (params) =>
-        params.row.parts.reduce((acc, part) => acc + part.cost, 0)
+      valueGetter: (_value, row) =>
+        row.parts.reduce((acc, part) => acc + part.cost, 0)
     },
     {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
       flex: 1,
-      valueGetter: (params) => getFormattedDate(params.row.createdAt)
+      valueGetter: (_value, row) => getFormattedDate(row.createdAt)
     }
   ];
   // Pro-only grid api/state removed in community build

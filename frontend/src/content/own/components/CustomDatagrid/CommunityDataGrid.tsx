@@ -22,6 +22,7 @@ function CommunityDataGrid(props: CommunityDataGridProps) {
     if (tableRef.current) {
       const viewportOffset = tableRef.current.getBoundingClientRect();
       const top = viewportOffset.top;
+      console.log(height - top - 15)
       return height - top - 15;
     }
     return 500;
@@ -41,6 +42,9 @@ function CommunityDataGrid(props: CommunityDataGridProps) {
   );
 
   const { notClickable, apiRef: _ignored, ...rest } = props;
+  // Normalize deprecated `components/componentsProps` to `slots/slotProps`
+  const incomingSlots = (rest as any).slots ?? (rest as any).components;
+  const incomingSlotProps = (rest as any).slotProps ?? (rest as any).componentsProps;
 
   return (
     <div ref={tableRef} style={{ height: tableHeight, width: '100%' }}>
@@ -55,19 +59,23 @@ function CommunityDataGrid(props: CommunityDataGridProps) {
             cursor: notClickable ? 'auto' : 'pointer'
           }
         }}
-        components={{
-          NoRowsOverlay: () => (
-            <Stack height="100%" alignItems="center" justifyContent="center">
-              <Typography variant="h3">{t('no_content')}</Typography>
-            </Stack>
-          ),
-          NoResultsOverlay: () => (
-            <Stack height="100%" alignItems="center" justifyContent="center">
-              <Typography variant="h3">{t('no_result_criteria')}</Typography>
-            </Stack>
-          )
+        slots={{
+          ...incomingSlots,
+          noRowsOverlay:
+            incomingSlots?.noRowsOverlay ?? (() => (
+              <Stack height="100%" alignItems="center" justifyContent="center">
+                <Typography variant="h3">{t('no_content')}</Typography>
+              </Stack>
+            )),
+          noResultsOverlay:
+            incomingSlots?.noResultsOverlay ?? (() => (
+              <Stack height="100%" alignItems="center" justifyContent="center">
+                <Typography variant="h3">{t('no_result_criteria')}</Typography>
+              </Stack>
+            ))
         }}
-        disableSelectionOnClick
+        slotProps={incomingSlotProps}
+        disableRowSelectionOnClick
         localeText={translatedGridLocaleText as any}
         {...rest}
       />

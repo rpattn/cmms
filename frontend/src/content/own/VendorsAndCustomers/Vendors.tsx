@@ -435,22 +435,23 @@ const Vendors = ({ openModal, handleCloseModal }: PropsType) => {
       }}
     >
       <CommunityDataGrid
-        pageSize={criteria.pageSize}
-        page={criteria.pageNum}
+        paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
         rows={vendors.content}
         rowCount={vendors.totalElements}
         pagination
         paginationMode="server"
         sortingMode="server"
-        onPageSizeChange={(size) => {
-          saveVendorGridState({ pageSize: size });
-          onPageSizeChange(size);
+        onPaginationModelChange={(model) => {
+          if (model.pageSize !== criteria.pageSize) {
+            saveVendorGridState({ pageSize: model.pageSize });
+            onPageSizeChange(model.pageSize);
+          }
+          if (model.page !== criteria.pageNum) {
+            saveVendorGridState({ page: model.page });
+            onPageChange(model.page);
+          }
         }}
-        onPageChange={(page) => {
-          saveVendorGridState({ page });
-          onPageChange(page);
-        }}
-        rowsPerPageOptions={[10, 20, 50]}
+        pageSizeOptions={[10, 20, 50]}
         columns={columns}
         loading={loadingGet}
         onSortModelChange={(model) => {

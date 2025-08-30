@@ -283,16 +283,17 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
     >
       {teams.content.length !== 0 ? (
         <CommunityDataGrid
-          pageSize={criteria.pageSize}
-          page={criteria.pageNum}
+          paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
           rows={teams.content}
           rowCount={teams.totalElements}
           pagination
           paginationMode="server"
           sortingMode="server"
-          onPageSizeChange={onPageSizeChange}
-          onPageChange={onPageChange}
-          rowsPerPageOptions={[10, 20, 50]}
+          onPaginationModelChange={(model) => {
+            if (model.pageSize !== criteria.pageSize) onPageSizeChange(model.pageSize);
+            if (model.page !== criteria.pageNum) onPageChange(model.page);
+          }}
+          pageSizeOptions={[10, 20, 50]}
           columns={columns}
           onSortModelChange={(model) => {
             if (model.length === 0) {
@@ -497,16 +498,17 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
         </Stack>
       )}
       <CommunityDataGrid
-        pageSize={criteria.pageSize}
-        page={criteria.pageNum}
+        paginationModel={{ pageSize: criteria.pageSize, page: criteria.pageNum }}
         rows={teams.content}
         rowCount={teams.totalElements}
         pagination
         paginationMode="server"
         sortingMode="server"
-        onPageSizeChange={onPageSizeChange}
-        onPageChange={onPageChange}
-        rowsPerPageOptions={[10, 20, 50]}
+        onPaginationModelChange={(model) => {
+          if (model.pageSize !== criteria.pageSize) onPageSizeChange(model.pageSize);
+          if (model.page !== criteria.pageNum) onPageChange(model.page);
+        }}
+        pageSizeOptions={[10, 20, 50]}
         loading={loadingGet}
         onSortModelChange={(model) => {
           saveTeamsGridState({ sortModel: model });
@@ -533,9 +535,7 @@ const Teams = ({ openModal, handleCloseModal }: PropsType) => {
           });
         }}
         columns={columns}
-        components={{
-          Toolbar: GridToolbar
-        }}
+        slots={{ toolbar: GridToolbar }}
         initialState={{
           columns: {
             columnVisibilityModel: savedTeamsState.columnVisibilityModel || {}
