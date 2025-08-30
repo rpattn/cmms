@@ -26,6 +26,7 @@ import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
 import Location from '../../../models/owns/location';
 import * as React from 'react';
 import { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { unstable_batchedUpdates } from 'react-dom';
 import { TitleContext } from '../../../contexts/TitleContext';
 import {
   addLocation,
@@ -187,9 +188,12 @@ function Locations() {
 
   const onQueryChange = (event: any) => {
     const q = event.target.value as string;
-    setQuery(q);
-    // Reset to first page on new query
-    setPageable((prev) => ({ ...prev, page: 0 }));
+    // Batch state updates to avoid duplicate effect triggers in React 17
+    unstable_batchedUpdates(() => {
+      setQuery(q);
+      // Reset to first page on new query
+      setPageable((prev) => ({ ...prev, page: 0 }));
+    });
   };
   const debouncedQueryChange = useMemo(() => debounce(onQueryChange, 1300), [pageable.size]);
 
