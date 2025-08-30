@@ -25,7 +25,7 @@ import { IField } from '../type';
 import ReplayTwoToneIcon from '@mui/icons-material/ReplayTwoTone';
 import Location from '../../../models/owns/location';
 import * as React from 'react';
-import { ChangeEvent, useContext, useEffect, useState } from 'react';
+import { ChangeEvent, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
 import {
   addLocation,
@@ -73,7 +73,9 @@ import { exportEntity } from '../../../slices/exports';
 import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
 import { PlanFeature } from '../../../models/owns/subscriptionPlan';
 // removed Pro state persistence; using model-based persistence below
-import { Pageable, Sort } from '../../../models/owns/page';
+import { FilterField, Pageable, Sort } from '../../../models/owns/page';
+import SearchInput from '../components/SearchInput';
+import { debounce } from '@mui/material';
 // Removed google maps dependency; using BasicMap (Leaflet)
 
 function Locations() {
@@ -164,6 +166,33 @@ function Locations() {
     size: savedLocationsState.pageSize ?? 20
   });
 
+  // Search handling (similar to Assets)
+  const [query, setQuery] = useState<string>('');
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
+
+  const buildSearchFilters = (q: string): FilterField[] => {
+    if (!q) return [];
+    return [
+      {
+        field: 'name',
+        operation: 'cn',
+        value: q,
+        alternatives: [
+          { field: 'address', operation: 'cn', value: q },
+          { field: 'customId', operation: 'cn', value: q }
+        ]
+      }
+    ];
+  };
+
+  const onQueryChange = (event: any) => {
+    const q = event.target.value as string;
+    setQuery(q);
+    // Reset to first page on new query
+    setPageable((prev) => ({ ...prev, page: 0 }));
+  };
+  const debouncedQueryChange = useMemo(() => debounce(onQueryChange, 1300), [pageable.size]);
+
   const handleOpenMenu = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -225,10 +254,16 @@ function Locations() {
 
   useEffect(() => {
     if (hasViewPermission(PermissionEntity.LOCATIONS)) {
-      handleReset(false);
-      dispatch(getLocationChildren(0, [], pageable));
+      // Prevent a NoRows flash before the thunk flips loadingGet
+      setIsBootstrapping(true);
+      dispatch(getLocationChildren(0, [], pageable, buildSearchFilters(query)));
     }
-  }, [pageable]);
+  }, [pageable, query]);
+
+  // Once the thunk marks loading, we can drop the bootstrap guard
+  useEffect(() => {
+    if (loadingGet) setIsBootstrapping(false);
+  }, [loadingGet]);
 
   // Removed Pro apiRef event subscriptions (handled via local expand/collapse state)
 
@@ -426,7 +461,10 @@ function Locations() {
     return fieldsClone;
   };
   const handleReset = (callApi: boolean) => {
-    dispatch(resetLocationsHierarchy(pageable, callApi));
+    setQuery('');
+    setPageable((prev) => ({ ...prev, page: 0 }));
+    saveLocationsGridState({ page: 0, pageSize: pageable.size });
+    dispatch(resetLocationsHierarchy({ page: 0, size: pageable.size }, callApi));
   };
   const shape = {
     name: Yup.string().required(t('required_location_name')),
@@ -688,6 +726,7 @@ function Locations() {
               </Tabs>
             )}
             <Stack direction={'row'} alignItems="center" spacing={1}>
+              <SearchInput onChange={debouncedQueryChange} />
               <IconButton onClick={() => handleReset(true)} color="primary">
                 <ReplayTwoToneIcon />
               </IconButton>
@@ -798,7 +837,7 @@ function Locations() {
                       return out;
                     })()}
                     getRowId={(row) => row.id}
-                    loading={loadingGet}
+                    loading={loadingGet || isBootstrapping}
                     pagination
                     paginationMode={'server'}
                     rowCount={locationsPage?.totalElements ?? 0}

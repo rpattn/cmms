@@ -7,7 +7,7 @@ import Location, {
 } from '../models/owns/location';
 import api from '../utils/api';
 import { revertAll } from 'src/utils/redux';
-import { Page, Pageable, pageableToQueryParams } from '../models/owns/page';
+import { FilterField, Page, Pageable, pageableToQueryParams } from '../models/owns/page';
 
 interface LocationState {
   locations: Location[];
@@ -104,6 +104,12 @@ const slice = createSlice({
         return acc;
       }, state.locationsHierarchy);
     },
+    setLocationsHierarchy(
+      state: LocationState,
+      action: PayloadAction<{ locations: LocationRow[] }>
+    ) {
+      state.locationsHierarchy = action.payload.locations;
+    },
     setLoadingGet(
       state: LocationState,
       action: PayloadAction<{ loading: boolean }>
@@ -167,7 +173,12 @@ export const deleteLocation =
   };
 
 export const getLocationChildren =
-  (id: number, parents: number[], pageable: Pageable): AppThunk =>
+  (
+    id: number,
+    parents: number[],
+    pageable: Pageable,
+    filters?: FilterField[]
+  ): AppThunk =>
   async (dispatch) => {
     dispatch(slice.actions.setLoadingGet({ loading: true }));
     try {
@@ -177,22 +188,20 @@ export const getLocationChildren =
           `locations/search`,
           {
             filterFields: [
-              { field: 'parentLocation', operation: 'nu', value: '' }
+              { field: 'parentLocation', operation: 'nu', value: '' },
+              ...(filters ?? [])
             ],
             pageNum: pageable.page,
             pageSize: pageable.size
           }
         );
         dispatch(slice.actions.setLocationsPage({ page }));
-        // reset current hierarchy when changing root page
-        dispatch(slice.actions.resetHierarchy({}));
         const rows = page.content.map((location) => ({
           ...location,
           hierarchy: [...parents, location.id]
         }));
-        dispatch(
-          slice.actions.getLocationChildren({ id, locations: rows })
-        );
+        // Replace hierarchy atomically to avoid transient empty state
+        dispatch(slice.actions.setLocationsHierarchy({ locations: rows }));
       } else {
         const locations = await api.get<Location[]>(
           `locations/children/${id}?${pageableToQueryParams(pageable)}`
@@ -215,6 +224,9 @@ export const getLocationChildren =
 export const resetLocationsHierarchy =
   (pageable: Pageable, callApi: boolean): AppThunk =>
   async (dispatch) => {
+    if (callApi) {
+      dispatch(slice.actions.setLoadingGet({ loading: true }));
+    }
     dispatch(slice.actions.resetHierarchy({}));
     if (callApi) {
       dispatch(getLocationChildren(0, [], pageable));
