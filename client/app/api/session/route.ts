@@ -20,7 +20,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No token in response' }, { status: 500 });
     }
     const isProd = process.env.NODE_ENV === 'production';
-    cookies().set('session', data.accessToken, {
+    (await cookies()).set('session', data.accessToken, {
       httpOnly: true,
       sameSite: 'lax',
       secure: isProd,

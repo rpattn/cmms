@@ -24,7 +24,8 @@ function PriorityChip({ value }: { value?: string }) {
   return <Chip label={value || 'NONE'} color={color as any} size="small" />;
 }
 
-export default async function WorkOrderDetails({ params }: { params: { id: string } }) {
+export default async function WorkOrderDetails(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const id = Number(params.id);
   const wo = await getWorkOrder(id);
   if (!wo) return <Typography sx={{ p: 3 }}>Work order not found.</Typography>;

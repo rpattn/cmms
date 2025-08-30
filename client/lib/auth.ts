@@ -1,4 +1,4 @@
-import { cookies, headers } from 'next/headers';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 export type Session = {
@@ -6,20 +6,20 @@ export type Session = {
   // You may extend with decoded claims if needed.
 };
 
-export function getSession(): Session | null {
-  const cookieStore = cookies();
+export async function getSession(): Promise<Session | null> {
+  const cookieStore = await cookies();
   const token = cookieStore.get('session')?.value;
   if (!token) return null;
   return { token };
 }
 
-export function requireSession(): Session {
-  const session = getSession();
+export async function requireSession(): Promise<Session> {
+  const session = await getSession();
   if (!session) redirect('/login');
   return session;
 }
 
-export function clearSessionCookie() {
-  const cookieStore = cookies();
+export async function clearSessionCookie() {
+  const cookieStore = await cookies();
   cookieStore.set('session', '', { httpOnly: true, path: '/', maxAge: 0 });
 }

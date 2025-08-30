@@ -8,7 +8,7 @@ function backendUrl(pathParts: string[]) {
 }
 
 async function forward(req: NextRequest, pathParts: string[]) {
-  const token = cookies().get('session')?.value;
+  const token = (await cookies()).get('session')?.value;
   const url = backendUrl(pathParts);
   const method = req.method.toUpperCase();
   const headers: Record<string, string> = {
@@ -32,19 +32,24 @@ async function forward(req: NextRequest, pathParts: string[]) {
   });
 }
 
-export async function GET(req: NextRequest, { params }: { params: { path: string[] } }) {
+export async function GET(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   return forward(req, params.path);
 }
-export async function POST(req: NextRequest, { params }: { params: { path: string[] } }) {
+export async function POST(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   return forward(req, params.path);
 }
-export async function PUT(req: NextRequest, { params }: { params: { path: string[] } }) {
+export async function PUT(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   return forward(req, params.path);
 }
-export async function PATCH(req: NextRequest, { params }: { params: { path: string[] } }) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   return forward(req, params.path);
 }
-export async function DELETE(req: NextRequest, { params }: { params: { path: string[] } }) {
+export async function DELETE(req: NextRequest, props: { params: Promise<{ path: string[] }> }) {
+  const params = await props.params;
   return forward(req, params.path);
 }
 

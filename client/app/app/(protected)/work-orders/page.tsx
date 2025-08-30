@@ -4,13 +4,6 @@ import WorkOrdersGrid, { WorkOrderRow } from '@/components/work-orders/WorkOrder
 import SearchBox from '@/components/common/SearchBox';
 import WorkOrdersFilters from '@/components/work-orders/WorkOrdersFilters';
 
-type WorkOrderRow = {
-  id: number;
-  title?: string;
-  priority?: string;
-  dueDate?: string;
-};
-
 async function searchWorkOrders(criteria: SearchCriteria) {
   try {
     return await api<Page<WorkOrderRow>>('work-orders/search', {
@@ -22,11 +15,12 @@ async function searchWorkOrders(criteria: SearchCriteria) {
   }
 }
 
-export default async function WorkOrdersPage({
-  searchParams
-}: {
-  searchParams: { page?: string; size?: string; q?: string; sort?: string; priority?: string };
-}) {
+export default async function WorkOrdersPage(
+  props: {
+    searchParams: Promise<{ page?: string; size?: string; q?: string; sort?: string; priority?: string }>;
+  }
+) {
+  const searchParams = await props.searchParams;
   const page = Number(searchParams?.page ?? '0');
   const size = Number(searchParams?.size ?? '10');
   const q = searchParams?.q?.toString()?.trim();

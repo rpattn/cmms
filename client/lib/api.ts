@@ -4,7 +4,7 @@ import { API_URL } from './env';
 export async function api<T = unknown>(path: string, init: RequestInit = {}): Promise<T> {
   const isServer = typeof window === 'undefined';
   if (isServer) {
-    const token = cookies().get('session')?.value;
+    const token = (await cookies()).get('session')?.value;
     const headers: Record<string, string> = {
       Accept: 'application/json',
       ...(init.headers as Record<string, string>)

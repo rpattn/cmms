@@ -1,9 +1,17 @@
 "use client";
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<main style={{ padding: 24 }}><h1>Login</h1></main>}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/app/work-orders';
@@ -62,3 +70,4 @@ export default function LoginPage() {
     </main>
   );
 }
+

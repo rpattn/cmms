@@ -3,7 +3,7 @@
 import { DataGrid, GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
 import { Chip } from '@mui/material';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { useMemo } from 'react';
+import { useMemo, useCallback } from 'react';
 
 export type WorkOrderRow = {
   id: number;
@@ -47,29 +47,32 @@ export default function WorkOrdersGrid({
         field: 'dueDate',
         headerName: 'Due',
         width: 160,
-        valueFormatter: (params) => (params.value ? new Date(params.value as string).toLocaleDateString() : '')
+        valueFormatter: (params: any) => (params.value ? new Date(params.value as string).toLocaleDateString() : '')
       }
     ],
     []
   );
 
-  const onPaginationModelChange = (model: GridPaginationModel) => {
+  const onPaginationModelChange = useCallback((model: GridPaginationModel) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('page', String(model.page));
     params.set('size', String(model.pageSize));
     if (q) params.set('q', q);
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    const url = `${pathname}?${params.toString()}`;
+    // Defer navigation to avoid state updates during render/hydration
+    setTimeout(() => router.push(url), 0);
+  }, [searchParams, q, pathname, router]);
 
-  const onSortModelChange = (model: GridSortModel) => {
+  const onSortModelChange = useCallback((model: GridSortModel) => {
     const params = new URLSearchParams(searchParams.toString());
     if (model.length) {
       params.set('sort', `${model[0].field},${model[0].sort || 'asc'}`);
     } else {
       params.delete('sort');
     }
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    const url = `${pathname}?${params.toString()}`;
+    setTimeout(() => router.push(url), 0);
+  }, [searchParams, pathname, router]);
 
   const onRowClick = (params: any) => {
     router.push(`/app/work-orders/${params.id}`);
@@ -78,6 +81,14 @@ export default function WorkOrdersGrid({
   return (
     <div style={{ height: 600, width: '100%' }}>
       <DataGrid
+        sx={{
+          bgcolor: 'background.paper',
+          color: 'text.primary',
+          borderColor: 'divider',
+          '& .MuiDataGrid-columnHeaders': {
+            bgcolor: 'background.default'
+          }
+        }}
         rows={rows}
         columns={columns}
         pagination
