@@ -40,17 +40,12 @@ import ConfirmDialog from '../components/ConfirmDialog';
 import { useDispatch, useSelector } from '../../../store';
 import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
+import { GridColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import {
   GridActionsCellItem,
-  GridEventListener,
   GridRenderCellParams,
-  GridRow,
-  DataGridProps,
   GridRowParams,
-  GridToolbar,
-  GridValueGetterParams
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import Form from '../components/form';
@@ -288,13 +283,13 @@ function Locations() {
     newValues.latitude = newValues.coordinates?.lat;
     return newValues;
   };
-  const columns: GridEnrichedColDef[] = [
+  const columns: GridColDef[] = [
     {
       field: 'name',
       headerName: t('name'),
       description: t('name'),
       flex: 1,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<LocationRow, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -308,14 +303,12 @@ function Locations() {
       field: 'latitude',
       headerName: t('latitude'),
       description: t('latitude'),
-      type: 'number',
       flex: 0.5
     },
     {
       field: 'longitude',
       headerName: t('longitude'),
       description: t('longitude'),
-      type: 'number',
       flex: 0.5
     },
     {
@@ -767,7 +760,7 @@ function Locations() {
                         c.field === 'name'
                           ? {
                               ...c,
-                              renderCell: (params: GridRenderCellParams<string, LocationRow>) => (
+                              renderCell: (params: GridRenderCellParams<LocationRow, string>) => (
                                 <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                   {(params.row as any).hasChildren && (
                                     <IconButton

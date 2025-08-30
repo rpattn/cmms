@@ -5,10 +5,15 @@ import { useEffect, useRef, useState } from 'react';
 import gridLocaleText from './GridLocaleText';
 import useWindowDimensions from '../../../../hooks/useWindowDimensions';
 
-export interface CommunityDataGridProps extends DataGridProps {
+// Accept deprecated v5/v6 props (components/componentsProps) for backward compatibility
+export interface CommunityDataGridProps
+  extends Omit<DataGridProps, 'components' | 'componentsProps'> {
   notClickable?: boolean;
   // accept apiRef to ease migration, but ignore it in community grid
   apiRef?: any;
+  // deprecated aliases mapped to slots/slotProps internally
+  components?: any;
+  componentsProps?: any;
 }
 
 function CommunityDataGrid(props: CommunityDataGridProps) {
@@ -22,7 +27,6 @@ function CommunityDataGrid(props: CommunityDataGridProps) {
     if (tableRef.current) {
       const viewportOffset = tableRef.current.getBoundingClientRect();
       const top = viewportOffset.top;
-      console.log(height - top - 15)
       return height - top - 15;
     }
     return 500;

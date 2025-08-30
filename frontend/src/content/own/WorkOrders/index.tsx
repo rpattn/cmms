@@ -34,13 +34,10 @@ import {
   useState
 } from 'react';
 import { TitleContext } from '../../../contexts/TitleContext';
-import { GridEnrichedColDef } from '@mui/x-data-grid/models/colDef/gridColDef';
 import CommunityDataGrid from '../components/CustomDatagrid/CommunityDataGrid';
 import type { CustomDatagridColumn } from '../components/CustomDatagrid';
 import {
   GridRenderCellParams,
-  GridToolbar,
-  GridValueGetterParams
 } from '@mui/x-data-grid';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import Form from '../components/form';
@@ -368,8 +365,8 @@ function WorkOrders() {
       headerName: t('status'),
       description: t('status'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
-        <Box display="flex" flexDirection="row" justifyContent="center">
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
+        <Box display="flex" flexDirection="row" justifyContent="center" alignItems="center" height="100%">
           <CircleTwoToneIcon
             fontSize="small"
             color={
@@ -391,7 +388,7 @@ function WorkOrders() {
       headerName: t('title'),
       description: t('title'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
         <Box sx={{ fontWeight: 'bold' }}>{params.value}</Box>
       )
     },
@@ -401,7 +398,7 @@ function WorkOrders() {
       headerName: t('priority'),
       description: t('priority'),
       width: 150,
-      renderCell: (params: GridRenderCellParams<string>) => (
+      renderCell: (params: GridRenderCellParams<WorkOrder, string>) => (
         <PriorityWrapper priority={params.value} />
       )
     },
@@ -417,7 +414,11 @@ function WorkOrders() {
       description: t('worker'),
       width: 170,
       renderCell: (params: GridRenderCellParams<UserMiniDTO>) =>
-        params.value ? <UserAvatars users={[params.value]} /> : null
+        params.value ? 
+        <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
+          <UserAvatars users={[params.value]} /> 
+        </Box>
+        : null
     },
     {
       field: 'assignedTo',

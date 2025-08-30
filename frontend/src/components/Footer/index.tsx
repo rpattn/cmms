@@ -1,4 +1,5 @@
-import { Box, Card, Link, Typography, styled } from '@mui/material';
+import { Box, Card, Link, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 const FooterWrapper = styled(Card)(
   ({ theme }) => `

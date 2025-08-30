@@ -1,5 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
-import { Box, Card, Container, Link, styled, Typography } from '@mui/material';
+import { Box, Card, Container, Link, Typography } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Helmet } from 'react-helmet-async';
 import JWTLogin from '../LoginJWT';
 

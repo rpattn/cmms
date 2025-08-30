@@ -1,4 +1,5 @@
-import { Box, styled, Tooltip } from '@mui/material';
+import { Box, Tooltip } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 

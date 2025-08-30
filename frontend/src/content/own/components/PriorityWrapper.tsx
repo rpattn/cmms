@@ -1,4 +1,5 @@
-import { Box, styled, Typography, useTheme } from '@mui/material';
+import { Box, Typography, useTheme } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { getPriorityLabel } from '../../../utils/formatters';
 
@@ -23,6 +24,7 @@ export default function PriorityWrapper(props: {
   return priority === 'NONE' ? (
     <Typography>{getPriorityLabel(priority, t)}</Typography>
   ) : (
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
     <LabelWrapper
       sx={{
         background:
@@ -40,5 +42,6 @@ export default function PriorityWrapper(props: {
     >
       {t(priority)} {withSuffix ? t('priority') : null}
     </LabelWrapper>
+    </Box>
   );
 }

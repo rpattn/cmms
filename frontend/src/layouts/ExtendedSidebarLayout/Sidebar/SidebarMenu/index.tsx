@@ -1,4 +1,5 @@
-import { alpha, Box, List, ListSubheader, styled } from '@mui/material';
+import { alpha, Box, List, ListSubheader } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { matchPath, useLocation } from 'react-router-dom';
 import SidebarMenuItem from './item';
 import menuItems, { MenuItem } from './items';

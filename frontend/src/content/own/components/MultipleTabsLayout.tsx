@@ -1,7 +1,8 @@
 import { ChangeEvent, ReactNode } from 'react';
 import { Helmet } from 'react-helmet-async';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
-import { Box, Button, Card, Stack, styled, Tab, Tabs } from '@mui/material';
+import { Box, Button, Card, Stack, Tab, Tabs } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';

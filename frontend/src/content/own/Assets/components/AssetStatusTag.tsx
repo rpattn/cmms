@@ -1,5 +1,6 @@
 import { AssetStatus, assetStatuses } from '../../../../models/owns/asset';
-import { Box, styled, useTheme } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
+import { styled } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 const LabelWrapper = styled(Box)(
   ({ theme }) => `
@@ -15,15 +16,18 @@ export default function AssetStatusTag({ status }: { status: AssetStatus }) {
   const theme = useTheme();
   const { t } = useTranslation();
   return (
+    <Box sx={{ display: 'flex', alignItems: 'center', height: '100%' }}>
     <LabelWrapper
       sx={{
         background: assetStatuses
           .find((statusConfig) => status === statusConfig.status)
           ?.color(theme),
-        color: `white`
+        color: `white`,
+        justifySelf: 'left',
       }}
     >
       {t(status)}
     </LabelWrapper>
+    </Box>
   );
 }

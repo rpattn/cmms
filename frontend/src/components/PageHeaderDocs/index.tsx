@@ -2,7 +2,8 @@ import { FC } from 'react';
 import PropTypes from 'prop-types';
 
 import { useTranslation } from 'react-i18next';
-import { styled, Typography, Box, Divider } from '@mui/material';
+import { Typography, Box, Divider } from '@mui/material';
+import { styled } from '@mui/material/styles';
 
 interface PageHeaderProps {
   heading: string;
