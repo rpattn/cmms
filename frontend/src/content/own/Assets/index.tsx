@@ -142,8 +142,8 @@ function Assets() {
   const savedAssetState = loadAssetGridState();
   const [view, setView] = useState<ViewType>('hierarchy');
   const [pageable, setPageable] = useState<Pageable>({
-    page: 0,
-    size: 1000
+    page: (savedAssetState.page as number) ?? 0,
+    size: (savedAssetState.pageSize as number) ?? 20
   });
   const initialCriteria: SearchCriteria = {
     filterFields: [
@@ -233,10 +233,18 @@ function Assets() {
     showSnackBar(t('asset_create_failure'), 'error');
   const handleCloseFilterDrawer = () => setOpenFilterDrawer(false);
   const onPageSizeChange = (size: number) => {
-    setCriteria({ ...criteria, pageSize: size });
+    if (view === 'hierarchy') {
+      setPageable({ ...pageable, size });
+    } else {
+      setCriteria({ ...criteria, pageSize: size });
+    }
   };
   const onPageChange = (number: number) => {
-    setCriteria({ ...criteria, pageNum: number });
+    if (view === 'hierarchy') {
+      setPageable({ ...pageable, page: number });
+    } else {
+      setCriteria({ ...criteria, pageNum: number });
+    }
   };
   const renderMenu = () => (
     <Menu
@@ -863,7 +871,10 @@ useEffect(() => {
                   getRowId={(row) => row.id}
                   disableColumnFilter
                   loading={loadingGet}
-                  paginationMode={view === 'hierarchy' ? undefined : 'server'}
+                  paginationMode={'server'}
+                  rowCount={assets.totalElements}
+                  page={view === 'hierarchy' ? pageable.page : criteria.pageNum}
+                  pageSize={view === 'hierarchy' ? pageable.size : criteria.pageSize}
                   onPageSizeChange={(size) => {
                     saveAssetGridState({ pageSize: size });
                     onPageSizeChange(size);

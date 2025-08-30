@@ -200,18 +200,55 @@ export const getAssetChildren =
   (id: number, parents: number[], pageable: Pageable): AppThunk =>
   async (dispatch) => {
     dispatch(slice.actions.setLoadingGet({ loading: true }));
-    const assets = await api.get<AssetDTO[]>(
-      `${basePath}/children/${id}?${pageableToQueryParams(pageable)}`
-    );
-    dispatch(
-      slice.actions.getAssetChildren({
-        id,
-        assets: assets.map((asset) => {
-          return { ...asset, hierarchy: [...parents, asset.id] };
-        })
-      })
-    );
-    dispatch(slice.actions.setLoadingGet({ loading: false }));
+    try {
+      if (id === 0) {
+        // Root-level fetch must use search (GET /assets is not supported)
+        // Only fetch top-level assets (no parent) — children are lazy-loaded
+        const page = await api.post<Page<AssetDTO>>(
+          `${basePath}/search`,
+          {
+            filterFields: [
+              {
+                field: 'parentAsset',
+                operation: 'nu',
+                value: ''
+              }
+            ],
+            pageNum: pageable.page,
+            pageSize: pageable.size
+          }
+        );
+        // keep overall page meta in state for UI pagination (rowCount, etc.)
+        dispatch(slice.actions.getAssets({ assets: page }));
+        // reset current hierarchy when changing root page
+        dispatch(slice.actions.resetHierarchy({}));
+        const rows = page.content.map((asset) => ({
+          ...asset,
+          hierarchy: [...parents, asset.id]
+        }));
+        dispatch(
+          slice.actions.getAssetChildren({
+            id,
+            assets: rows
+          })
+        );
+      } else {
+        const assets = await api.get<AssetDTO[]>(
+          `${basePath}/children/${id}?${pageableToQueryParams(pageable)}`
+        );
+        dispatch(
+          slice.actions.getAssetChildren({
+            id,
+            assets: assets.map((asset) => ({
+              ...asset,
+              hierarchy: [...parents, asset.id]
+            }))
+          })
+        );
+      }
+    } finally {
+      dispatch(slice.actions.setLoadingGet({ loading: false }));
+    }
   };
 
 export const getAssetDetails =
@@ -265,6 +302,6 @@ export const resetAssetsHierarchy =
   (callApi: boolean): AppThunk =>
   async (dispatch) => {
     dispatch(slice.actions.resetHierarchy({}));
-    if (callApi) dispatch(getAssetChildren(0, [], { page: 0, size: 1000 }));
+    if (callApi) dispatch(getAssetChildren(0, [], { page: 0, size: 20 }));
   };
 export default slice;

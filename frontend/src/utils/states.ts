@@ -43,8 +43,16 @@ export const getOwnHeadersConfig = (
       },
       { label: t('name'), keyName: 'name', required: true },
       { label: t('address'), keyName: 'address' },
-      { label: t('longitude'), keyName: 'longitude' },
-      { label: t('latitude'), keyName: 'latitude' },
+      {
+        label: t('longitude'),
+        keyName: 'longitude',
+        aliases: ['lng', 'lon', 'long', 'x', 'longitude']
+      },
+      {
+        label: t('latitude'),
+        keyName: 'latitude',
+        aliases: ['lat', 'y', 'latitude']
+      },
       { label: t('parent_location'), keyName: 'parentLocationName' },
       { label: t('customers'), keyName: 'customersNames', formatter: arrayFormatter },
       { label: t('vendors'), keyName: 'vendorsNames', formatter: arrayFormatter },

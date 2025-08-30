@@ -264,6 +264,20 @@ function Locations() {
       flex: 1
     },
     {
+      field: 'latitude',
+      headerName: t('latitude'),
+      description: t('latitude'),
+      type: 'number',
+      flex: 0.5
+    },
+    {
+      field: 'longitude',
+      headerName: t('longitude'),
+      description: t('longitude'),
+      type: 'number',
+      flex: 0.5
+    },
+    {
       field: 'createdAt',
       headerName: t('created_at'),
       description: t('created_at'),
@@ -809,6 +823,8 @@ function Locations() {
                       const mapper: Record<string, string> = {
                         name: 'name',
                         address: 'address',
+                        latitude: 'latitude',
+                        longitude: 'longitude',
                         createdAt: 'createdAt',
                         customId: 'customId'
                       };

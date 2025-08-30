@@ -54,6 +54,7 @@ export interface OwnHeader {
   keyName: ImportKeys;
   required?: boolean;
   formatter?: (value: any) => any;
+  aliases?: string[]; // optional alternative labels for matching
 }
 
 export type EntityType =
@@ -110,31 +111,49 @@ const Import = ({}: OwnProps) => {
     setLoading(false);
   };
   useEffect(() => {
-    if (userHeaders.length) {
-      let result: { userHeader: string; keyName: string }[] = [];
-      headerKeysConfig[entity].forEach((ownHeader) => {
-        const closestMatchInUserHeaders = closestMatch(
-          ownHeader.label,
-          userHeaders
-        );
-        let closestUserHeader = closestMatchInUserHeaders;
-        if (Array.isArray(closestMatchInUserHeaders))
-          closestUserHeader = closestMatchInUserHeaders[0];
-        if (
-          closestUserHeader &&
-          distance(closestUserHeader as string, ownHeader.label) < 5 &&
-          result.every(({ userHeader }) => userHeader !== closestUserHeader)
-        ) {
-          result.push({
-            userHeader: userHeaders.find(
-              (userHeader) => userHeader === closestUserHeader
-            ),
-            keyName: ownHeader.keyName
-          });
+    if (!userHeaders.length) return;
+    const result: { userHeader: string; keyName: string }[] = [];
+    const used = new Set<string>();
+    const userHeadersLower = userHeaders.map((h) => h.toLowerCase().trim());
+    headerKeysConfig[entity].forEach((ownHeader) => {
+      // Try alias exact/loose matching first
+      const aliases = [ownHeader.label, ...(ownHeader.aliases || [])].map((a) =>
+        String(a).toLowerCase().trim()
+      );
+      let matchedUserHeader: string | undefined;
+      // exact contains match on aliases
+      for (const alias of aliases) {
+        const idx = userHeadersLower.findIndex((h) => h === alias);
+        if (idx !== -1 && !used.has(userHeaders[idx])) {
+          matchedUserHeader = userHeaders[idx];
+          break;
         }
-      });
-      match(result);
-    }
+      }
+      // fallback to closest distance across aliases
+      if (!matchedUserHeader) {
+        let bestHeader: string | undefined;
+        let bestScore = Infinity;
+        for (const alias of aliases) {
+          const cm = closestMatch(alias, userHeaders);
+          const candidate = Array.isArray(cm) ? cm[0] : (cm as string);
+          if (candidate) {
+            const d = distance(candidate.toLowerCase(), alias);
+            if (d < bestScore) {
+              bestScore = d;
+              bestHeader = candidate;
+            }
+          }
+        }
+        if (bestHeader && bestScore < 5 && !used.has(bestHeader)) {
+          matchedUserHeader = bestHeader;
+        }
+      }
+      if (matchedUserHeader) {
+        used.add(matchedUserHeader);
+        result.push({ userHeader: matchedUserHeader, keyName: ownHeader.keyName });
+      }
+    });
+    match(result);
   }, [userHeaders]);
 
   const handleNext = () => {
