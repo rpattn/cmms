@@ -1,4 +1,4 @@
-import { api } from '@/lib/api';
+import { apiServer } from '@/lib/apiServer';
 import { Card, CardContent, Chip, Grid, Stack, Typography } from '@mui/material';
 
 type WorkOrder = {
@@ -12,7 +12,7 @@ type WorkOrder = {
 
 async function getWorkOrder(id: number) {
   try {
-    return await api<WorkOrder>(`work-orders/${id}`);
+    return await apiServer<WorkOrder>(`work-orders/${id}`);
   } catch {
     return null;
   }

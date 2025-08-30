@@ -1,4 +1,4 @@
-import { api } from './api';
+import { apiServer } from './apiServer';
 
 export type UserResponseDTO = {
   id: number;
@@ -8,6 +8,6 @@ export type UserResponseDTO = {
 };
 
 export async function getMe() {
-  return api<UserResponseDTO>('auth/me');
+  return apiServer<UserResponseDTO>('auth/me');
 }
 

@@ -34,6 +34,8 @@ export interface FilterField {
   value: any;
   operation: SearchOperator;
   values?: any[];
+  enumName?: string;
+  joinType?: 'LEFT' | 'RIGHT' | 'INNER' | null;
   alternatives?: FilterField[];
 }
 
@@ -45,4 +47,3 @@ export interface SearchCriteria {
   pageSize?: number;
   sortField?: string;
 }
-

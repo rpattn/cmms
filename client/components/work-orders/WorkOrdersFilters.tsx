@@ -5,16 +5,26 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 
 const priorities = ['ALL', 'HIGH', 'MEDIUM', 'LOW', 'NONE'] as const;
 
-export default function WorkOrdersFilters() {
+export default function WorkOrdersFilters({
+  value,
+  onPriorityChange
+}: {
+  value?: string;
+  onPriorityChange?: (value: string) => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const current = (searchParams.get('priority') || 'ALL').toUpperCase();
+  const current = (value || searchParams.get('priority') || 'ALL').toUpperCase();
 
-  const onChange = (value: string) => {
+  const onChange = (v: string) => {
+    if (onPriorityChange) {
+      onPriorityChange(v);
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
-    if (value === 'ALL') params.delete('priority');
-    else params.set('priority', value);
+    if (v === 'ALL') params.delete('priority');
+    else params.set('priority', v);
     params.set('page', '0');
     router.push(`${pathname}?${params.toString()}`);
   };
@@ -39,4 +49,3 @@ export default function WorkOrdersFilters() {
     </Stack>
   );
 }
-

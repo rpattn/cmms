@@ -1,16 +1,34 @@
 "use client";
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
-export default function SearchBox({ initial }: { initial?: string }) {
+export default function SearchBox({
+  initial,
+  value: controlledValue,
+  onSearch
+}: {
+  initial?: string;
+  value?: string;
+  onSearch?: (value: string) => void;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const [value, setValue] = useState(initial || '');
+  const [uncontrolledValue, setUncontrolledValue] = useState(initial || '');
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  // If a controlled value is provided, mirror it into local input state
+  useEffect(() => {
+    if (controlledValue !== undefined) {
+      setUncontrolledValue(controlledValue);
+    }
+  }, [controlledValue]);
+
+  const submit = (value: string) => {
+    if (onSearch) {
+      onSearch(value);
+      return;
+    }
     const params = new URLSearchParams(searchParams.toString());
     if (value) params.set('q', value);
     else params.delete('q');
@@ -18,13 +36,18 @@ export default function SearchBox({ initial }: { initial?: string }) {
     router.push(`${pathname}?${params.toString()}`);
   };
 
+  const onSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    submit(uncontrolledValue);
+  };
+
   return (
     <form onSubmit={onSubmit} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
       <input
         type="text"
         placeholder="Search title..."
-        value={value}
-        onChange={(e) => setValue(e.target.value)}
+        value={uncontrolledValue}
+        onChange={(e) => setUncontrolledValue(e.target.value)}
         style={{ padding: 8, width: 260 }}
       />
       <button type="submit" style={{ padding: '8px 12px' }}>
@@ -33,4 +56,3 @@ export default function SearchBox({ initial }: { initial?: string }) {
     </form>
   );
 }
-
