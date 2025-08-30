@@ -1,4 +1,3 @@
-import './vite-env-shim';
 // Ensure FullCalendar VDOM is registered before any plugin loads (Vite eval order)
 import '@fullcalendar/react/dist/vdom';
 import ReactDOM from 'react-dom';

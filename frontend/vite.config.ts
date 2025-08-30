@@ -1,13 +1,34 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+// import path from 'path'; // Removed, not available in browser/Vite context
 
 // Vite configuration for CRA-to-Vite side-by-side trial
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
   server: {
     port: 3000,
-    open: false
+    open: false,
+    proxy: {
+      '/auth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false
+      },
+      '/ws': {
+        target: 'http://localhost:8080',
+        ws: true,
+        changeOrigin: true,
+        secure: false
+      }
+    }
+  },
+  preview: {
+    port: 5000
   },
   optimizeDeps: {
     include: [
@@ -22,7 +43,7 @@ export default defineConfig(({ mode }) => ({
   },
   resolve: {
     alias: {
-      src: path.resolve(__dirname, 'src')
+      src: new URL('./src', import.meta.url).pathname
     }
   },
   define: {

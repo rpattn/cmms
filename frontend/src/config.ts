@@ -1,58 +1,53 @@
-const getRuntimeValue = (
-  key: string,
-  defaultValue = ''
-): string | undefined => {
-  const envValue = process.env[`REACT_APP_${key}`];
-  const runtimeValue = window.__RUNTIME_CONFIG__?.[key]?.trim();
-  return envValue || runtimeValue || defaultValue;
+const getEnvValue = (key: string, defaultValue = ''): string => {
+  const v = (import.meta as any).env?.[`VITE_${key}`];
+  if (typeof v === 'string') return v;
+  return defaultValue;
 };
 
 export const firebaseConfig = {
-  apiKey: getRuntimeValue('API_KEY'),
-  authDomain: getRuntimeValue('AUTH_DOMAIN'),
-  databaseURL: getRuntimeValue('DATABASE_URL'),
-  projectId: getRuntimeValue('PROJECT_ID'),
-  storageBucket: getRuntimeValue('STORAGE_BUCKET'),
-  messagingSenderId: getRuntimeValue('MESSAGING_SENDER_ID'),
-  appId: getRuntimeValue('ID'),
-  measurementId: getRuntimeValue('MEASUREMENT_ID')
+  apiKey: getEnvValue('API_KEY'),
+  authDomain: getEnvValue('AUTH_DOMAIN'),
+  databaseURL: getEnvValue('DATABASE_URL'),
+  projectId: getEnvValue('PROJECT_ID'),
+  storageBucket: getEnvValue('STORAGE_BUCKET'),
+  messagingSenderId: getEnvValue('MESSAGING_SENDER_ID'),
+  appId: getEnvValue('ID'),
+  measurementId: getEnvValue('MEASUREMENT_ID')
 };
 
 export const googleMapsConfig = {
-  apiKey: getRuntimeValue('GOOGLE_KEY')
+  apiKey: getEnvValue('GOOGLE_KEY')
 };
 
-const rawApiUrl = getRuntimeValue('API_URL');
+const rawApiUrl = getEnvValue('API_URL');
 export const apiUrl = rawApiUrl
   ? rawApiUrl.endsWith('/')
     ? rawApiUrl
     : rawApiUrl + '/'
   : 'http://localhost:8080/';
 
-export const muiLicense = getRuntimeValue('MUI_X_LICENSE');
+export const muiLicense = getEnvValue('MUI_X_LICENSE');
 
 export const zendeskKey = '';
 
-export const googleTrackingId = getRuntimeValue('GOOGLE_TRACKING_ID');
-export const oauth2Provider = getRuntimeValue('OAUTH2_PROVIDER') as
+export const googleTrackingId = getEnvValue('GOOGLE_TRACKING_ID');
+export const oauth2Provider = getEnvValue('OAUTH2_PROVIDER') as
   | 'GOOGLE'
   | 'MICROSOFT';
 
 export const isEmailVerificationEnabled =
-  getRuntimeValue('INVITATION_VIA_EMAIL') === 'true';
+  getEnvValue('INVITATION_VIA_EMAIL') === 'true';
 
-export const isCloudVersion = getRuntimeValue('CLOUD_VERSION') === 'true';
+export const isCloudVersion = getEnvValue('CLOUD_VERSION') === 'true';
 
 const apiHostName = new URL(apiUrl).hostname;
 export const IS_LOCALHOST =
   apiHostName === 'localhost' || apiHostName === '127.0.0.1';
 
-export const isSSOEnabled = getRuntimeValue('ENABLE_SSO') === 'true';
+export const isSSOEnabled = getEnvValue('ENABLE_SSO') === 'true';
 
 export const customLogoPaths: { white?: string; dark: string } =
-  getRuntimeValue('LOGO_PATHS')
-    ? JSON.parse(getRuntimeValue('LOGO_PATHS'))
-    : null;
+  getEnvValue('LOGO_PATHS') ? JSON.parse(getEnvValue('LOGO_PATHS')) : null;
 type ThemeColors = {
   primary: string;
   secondary: string;
@@ -65,8 +60,8 @@ type ThemeColors = {
   primaryAlt: string;
 };
 
-export const customColors: ThemeColors = getRuntimeValue('CUSTOM_COLORS')
-  ? JSON.parse(getRuntimeValue('CUSTOM_COLORS'))
+export const customColors: ThemeColors = getEnvValue('CUSTOM_COLORS')
+  ? JSON.parse(getEnvValue('CUSTOM_COLORS'))
   : null;
 
 export interface BrandRawConfig {
@@ -78,8 +73,8 @@ export interface BrandRawConfig {
   phone: string;
   addressCity: string;
 }
-export const brandRawConfig: BrandRawConfig = getRuntimeValue('BRAND_CONFIG')
-  ? JSON.parse(getRuntimeValue('BRAND_CONFIG'))
+export const brandRawConfig: BrandRawConfig = getEnvValue('BRAND_CONFIG')
+  ? JSON.parse(getEnvValue('BRAND_CONFIG'))
   : null;
 
 export const isWhiteLabeled: boolean = !!(customLogoPaths || brandRawConfig);

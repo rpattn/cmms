@@ -1,23 +1,20 @@
-Vite trial setup (side-by-side with CRA)
+Vite setup (single toolchain)
 
-What was added
+What’s in place
 - Vite config: `frontend/vite.config.ts`
-- Vite entry HTML: `frontend/index.html`
-- Env shim: `frontend/src/vite-env-shim.ts` to provide `process.env`-like access
-- Scripts: `dev:vite`, `build:vite`, `preview:vite` kept alongside CRA scripts
+- Entry HTML: `frontend/index.html`
+- Scripts: `start`, `build`, `preview` (Vite)
 
 How to run
-- Dev (Vite): `npm run dev:vite` (serves on http://localhost:3000)
-- Build (Vite): `npm run build:vite` (outputs to `frontend/dist`)
-- Preview build: `npm run preview:vite`
+- Dev: `npm run start` (http://localhost:3000)
+- Build: `npm run build` (outputs to `frontend/dist`)
+- Preview build: `npm run preview`
 
-Env behavior
-- Existing runtime config via `public/runtime-env.js` continues to work (loaded in `index.html`).
-- For Vite-specific env files (`.env`, `.env.local`), define variables as `VITE_<NAME>`.
-  The shim maps `VITE_FOO` to `process.env.REACT_APP_FOO` at runtime for existing code paths.
-- `process.env.NODE_ENV` and `process.env.PUBLIC_URL` are provided for legacy checks.
+Environment variables (Vite-native)
+- Define variables in `.env`, `.env.local`, etc. as `VITE_<NAME>`.
+- Access them in code via `import.meta.env.VITE_<NAME>`.
+- Example variables: see `frontend/.env.example`.
 
-Notes
-- CRA scripts and behavior remain unchanged; both toolchains can be used on this branch.
-- If you rely on generating `public/runtime-env.js`, keep using your existing process (e.g., `runtime-env-cra`) or edit the file manually for the Vite dev session.
-
+Migration notes
+- Removed CRA and runtime env injection. `public/runtime-env.js` and the `vite-env-shim` were deleted.
+- If you previously depended on runtime variable injection, migrate those to Vite’s build-time variables.
