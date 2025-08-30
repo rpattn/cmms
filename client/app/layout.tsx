@@ -1,6 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
-import MuiProvider from '@/components/providers/MuiProvider';
+import AppThemeProvider from '@/components/providers/AppThemeProvider';
 
 export const metadata: Metadata = {
   title: 'CMMS Client',
@@ -11,7 +11,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body>
-        <MuiProvider>{children}</MuiProvider>
+        <AppThemeProvider>{children}</AppThemeProvider>
       </body>
     </html>
   );

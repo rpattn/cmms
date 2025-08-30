@@ -7,7 +7,8 @@ export function middleware(req: NextRequest) {
     const token = req.cookies.get('session')?.value;
     if (!token) {
       const url = new URL('/login', req.url);
-      url.searchParams.set('next', pathname);
+      const fullPath = req.nextUrl.pathname + (req.nextUrl.search || '');
+      url.searchParams.set('next', fullPath);
       return NextResponse.redirect(url);
     }
   }
@@ -17,4 +18,3 @@ export function middleware(req: NextRequest) {
 export const config = {
   matcher: ['/app/:path*']
 };
-

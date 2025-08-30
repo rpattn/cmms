@@ -1,5 +1,3 @@
-"use server";
-
 import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
@@ -25,4 +23,3 @@ export function clearSessionCookie() {
   const cookieStore = cookies();
   cookieStore.set('session', '', { httpOnly: true, path: '/', maxAge: 0 });
 }
-

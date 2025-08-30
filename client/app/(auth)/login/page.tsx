@@ -1,10 +1,12 @@
 "use client";
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/app/work-orders';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +27,7 @@ export default function LoginPage() {
       setError(error);
       return;
     }
-    router.replace('/app/work-orders');
+    router.replace(next);
   };
 
   return (
@@ -60,4 +62,3 @@ export default function LoginPage() {
     </main>
   );
 }
-
