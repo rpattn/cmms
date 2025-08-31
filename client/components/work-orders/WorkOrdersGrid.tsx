@@ -94,7 +94,7 @@ export default function WorkOrdersGrid({
               size="small"
               value={val}
               onChange={(e) => onChange(e.target.value)}
-              sx={{ minWidth: 150 }}
+              sx={{ minWidth: 150, verticalAlign: 'inherit' }}
             >
               {['OPEN','IN_PROGRESS','ON_HOLD','COMPLETE'].map((s) => (
                 <MenuItem key={s} value={s}>{s}</MenuItem>
@@ -110,7 +110,7 @@ export default function WorkOrdersGrid({
         renderCell: (params: any) => {
           const v = (params.value as string) || 'NONE';
           const color = v === 'HIGH' ? 'error' : v === 'MEDIUM' ? 'warning' : v === 'LOW' ? 'success' : 'default';
-          return <Chip label={v} color={color as any} size="small" />;
+          return <Chip label={v} color={color as any} size="small" sx={{verticalAlign: 'inherit'}} />;
         }
       },
       {

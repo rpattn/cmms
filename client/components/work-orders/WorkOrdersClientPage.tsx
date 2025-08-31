@@ -17,6 +17,7 @@ import WorkOrderDetailsPanel from '@/components/work-orders/WorkOrderDetailsPane
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import EditWorkOrderModal from '@/components/work-orders/EditWorkOrderModal';
 import WorkOrdersCalendar from '@/components/work-orders/WorkOrdersCalendar';
+import { RemoteOption } from '@/components/common/RemoteSearchSelect';
 
 export default function WorkOrdersClientPage({
   initialPage = 0,
@@ -64,6 +65,22 @@ export default function WorkOrdersClientPage({
   const [editOpen, setEditOpen] = useState(false);
   const [dueFrom, setDueFrom] = useState<string | null>(null);
   const [dueTo, setDueTo] = useState<string | null>(null);
+  // Advanced filters state
+  const [typeValue, setTypeValue] = useState<'ALL' | 'REACTIVE' | 'REPEATING'>('ALL');
+  const [assets, setAssets] = useState<RemoteOption[]>([]);
+  const [locations, setLocations] = useState<RemoteOption[]>([]);
+  const [teams, setTeams] = useState<RemoteOption[]>([]);
+  const [primaryUsers, setPrimaryUsers] = useState<RemoteOption[]>([]);
+  const [assignedToUsers, setAssignedToUsers] = useState<RemoteOption[]>([]);
+  const [customers, setCustomers] = useState<RemoteOption[]>([]);
+  const [createdByUsers, setCreatedByUsers] = useState<RemoteOption[]>([]);
+  const [completedByUsers, setCompletedByUsers] = useState<RemoteOption[]>([]);
+  const [createdFrom, setCreatedFrom] = useState<string | null>(null);
+  const [createdTo, setCreatedTo] = useState<string | null>(null);
+  const [updatedFrom, setUpdatedFrom] = useState<string | null>(null);
+  const [updatedTo, setUpdatedTo] = useState<string | null>(null);
+  const [completedFrom, setCompletedFrom] = useState<string | null>(null);
+  const [completedTo, setCompletedTo] = useState<string | null>(null);
 
   // Open details drawer if URL contains ?wo=ID
   useEffect(() => {
@@ -105,6 +122,22 @@ export default function WorkOrdersClientPage({
     if (dueTo) {
       filterFields.push({ field: 'dueDate', operation: 'le', value: dueTo } as any);
     }
+    if (typeValue === 'REACTIVE') filterFields.push({ field: 'parentPreventiveMaintenance', operation: 'nu', value: '' } as any);
+    if (typeValue === 'REPEATING') filterFields.push({ field: 'parentPreventiveMaintenance', operation: 'nn', value: '' } as any);
+    if (assets.length) filterFields.push({ field: 'asset', operation: 'in', value: '', values: assets.map(a => a.id) } as any);
+    if (locations.length) filterFields.push({ field: 'location', operation: 'in', value: '', values: locations.map(a => a.id) } as any);
+    if (teams.length) filterFields.push({ field: 'team', operation: 'in', value: '', values: teams.map(a => a.id) } as any);
+    if (primaryUsers.length) filterFields.push({ field: 'primaryUser', operation: 'in', value: '', values: primaryUsers.map(a => a.id) } as any);
+    if (createdByUsers.length) filterFields.push({ field: 'createdBy', operation: 'in', value: '', values: createdByUsers.map(a => a.id) } as any);
+    if (completedByUsers.length) filterFields.push({ field: 'completedBy', operation: 'in', value: '', values: completedByUsers.map(a => a.id) } as any);
+    if (assignedToUsers.length) filterFields.push({ field: 'assignedTo', operation: 'inm', value: '', values: assignedToUsers.map(a => a.id) } as any);
+    if (customers.length) filterFields.push({ field: 'customer', operation: 'inm', value: '', values: customers.map(a => a.id) } as any);
+    if (createdFrom) filterFields.push({ field: 'createdAt', operation: 'ge', value: createdFrom } as any);
+    if (createdTo) filterFields.push({ field: 'createdAt', operation: 'le', value: createdTo } as any);
+    if (updatedFrom) filterFields.push({ field: 'updatedAt', operation: 'ge', value: updatedFrom } as any);
+    if (updatedTo) filterFields.push({ field: 'updatedAt', operation: 'le', value: updatedTo } as any);
+    if (completedFrom) filterFields.push({ field: 'completedOn', operation: 'ge', value: completedFrom } as any);
+    if (completedTo) filterFields.push({ field: 'completedOn', operation: 'le', value: completedTo } as any);
     const crit: SearchCriteria = {
       pageNum: page,
       pageSize,
@@ -126,7 +159,7 @@ export default function WorkOrdersClientPage({
       crit.direction = (sortModel[0].sort === 'desc' ? 'DESC' : 'ASC');
     }
     return crit;
-  }, [page, pageSize, q, priority, sortModel, statuses, hideArchived, dueFrom, dueTo]);
+  }, [page, pageSize, q, priority, sortModel, statuses, hideArchived, dueFrom, dueTo, typeValue, assets, locations, teams, primaryUsers, createdByUsers, completedByUsers, assignedToUsers, customers, createdFrom, createdTo, updatedFrom, updatedTo, completedFrom, completedTo]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -205,6 +238,32 @@ export default function WorkOrdersClientPage({
             dueTo={dueTo}
             onDueFromChange={(v) => { setPage(0); setDueFrom(v); }}
             onDueToChange={(v) => { setPage(0); setDueTo(v); }}
+            typeValue={typeValue}
+            onTypeChange={(v) => { setPage(0); setTypeValue(v); }}
+            assets={assets}
+            onAssetsChange={(vals) => { setPage(0); setAssets(vals); }}
+            locations={locations}
+            onLocationsChange={(vals) => { setPage(0); setLocations(vals); }}
+            teams={teams}
+            onTeamsChange={(vals) => { setPage(0); setTeams(vals); }}
+            primaryUsers={primaryUsers}
+            onPrimaryUsersChange={(vals) => { setPage(0); setPrimaryUsers(vals); }}
+            assignedTo={assignedToUsers}
+            onAssignedToChange={(vals) => { setPage(0); setAssignedToUsers(vals); }}
+            customers={customers}
+            onCustomersChange={(vals) => { setPage(0); setCustomers(vals); }}
+            createdFrom={createdFrom}
+            createdTo={createdTo}
+            onCreatedFromChange={(v) => { setPage(0); setCreatedFrom(v); }}
+            onCreatedToChange={(v) => { setPage(0); setCreatedTo(v); }}
+            updatedFrom={updatedFrom}
+            updatedTo={updatedTo}
+            onUpdatedFromChange={(v) => { setPage(0); setUpdatedFrom(v); }}
+            onUpdatedToChange={(v) => { setPage(0); setUpdatedTo(v); }}
+            completedFrom={completedFrom}
+            completedTo={completedTo}
+            onCompletedFromChange={(v) => { setPage(0); setCompletedFrom(v); }}
+            onCompletedToChange={(v) => { setPage(0); setCompletedTo(v); }}
           />
         </Box>
       </Drawer>
