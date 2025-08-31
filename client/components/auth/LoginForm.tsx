@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, Button, CircularProgress, IconButton, InputAdornment, Link, TextField, Typography } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import NextLink from 'next/link';
@@ -14,12 +14,26 @@ export default function LoginForm() {
   const [password, setPassword] = useState<string>('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+
+  const validations = useMemo(() => {
+    const errs: { email?: string; password?: string } = {};
+    if (!email) errs.email = 'Email is required';
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) errs.email = 'Enter a valid email';
+    if (!password) errs.password = 'Password is required';
+    return errs;
+  }, [email, password]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
+    setFormError(null);
+    // client-side guard similar to frontend
+    if (validations.email || validations.password) {
+      setTouched({ email: true, password: true });
+      return;
+    }
     const res = await fetch('/api/session', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -28,7 +42,7 @@ export default function LoginForm() {
     setLoading(false);
     if (!res.ok) {
       const data = await res.json().catch(() => ({}));
-      setError(data?.error || 'Login failed');
+      setFormError(data?.error || 'Wrong credentials');
       return;
     }
     router.replace(next);
@@ -37,6 +51,7 @@ export default function LoginForm() {
   return (
     <form noValidate onSubmit={onSubmit}>
       <TextField
+        error={Boolean(touched.email && validations.email)}
         fullWidth
         margin="normal"
         autoFocus
@@ -45,8 +60,11 @@ export default function LoginForm() {
         type="email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        onBlur={() => setTouched((t) => ({ ...t, email: true }))}
+        helperText={touched.email && validations.email}
       />
       <TextField
+        error={Boolean(touched.password && validations.password)}
         fullWidth
         margin="normal"
         label="Password"
@@ -54,6 +72,8 @@ export default function LoginForm() {
         type={showPassword ? 'text' : 'password'}
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        onBlur={() => setTouched((t) => ({ ...t, password: true }))}
+        helperText={touched.password && validations.password}
         InputProps={{
           endAdornment: (
             <InputAdornment position="end">
@@ -64,14 +84,14 @@ export default function LoginForm() {
           )
         }}
       />
-      <Box display={{ xs: 'block', md: 'flex' }} justifyContent="space-between" alignItems="center">
-        <NextLink href="/account/recover-password" passHref>
-          Forgot password?
-        </NextLink>
+      <Box alignItems="center" display={{ xs: 'block', md: 'flex' }} justifyContent="space-between">
+        <Link component={NextLink as any} href="/account/recover-password">
+          <b>Forgot password?</b>
+        </Link>
       </Box>
-      {error && (
+      {formError && (
         <Typography color="error" variant="body2" sx={{ mt: 1 }}>
-          {error}
+          {formError}
         </Typography>
       )}
       <Button sx={{ mt: 3 }} variant="contained" fullWidth size="large" type="submit" disabled={loading} startIcon={loading ? <CircularProgress size="1rem" /> : null}>
@@ -80,4 +100,3 @@ export default function LoginForm() {
     </form>
   );
 }
-
