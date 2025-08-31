@@ -3,6 +3,8 @@
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
+export const dynamic = 'force-dynamic';
+
 export default function LoginPage() {
   return (
     <Suspense fallback={<main style={{ padding: 24 }}><h1>Login</h1></main>}>
@@ -14,7 +16,7 @@ export default function LoginPage() {
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const next = searchParams.get('next') || '/app/work-orders';
+  const next = (searchParams && searchParams.get('next')) || '/app/work-orders';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -70,4 +72,3 @@ function LoginForm() {
     </main>
   );
 }
-

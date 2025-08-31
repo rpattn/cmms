@@ -164,7 +164,8 @@ export default function WorkOrdersCalendar({ onDateClick }: { onDateClick?: (dat
           }}
           eventClick={(info) => {
             const id = info.event.id;
-            const params = new URLSearchParams(searchParams.toString());
+            const base = searchParams ? searchParams.toString() : '';
+            const params = new URLSearchParams(base);
             params.set('wo', String(id));
             router.push(`${pathname}?${params.toString()}`);
           }}

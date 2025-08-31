@@ -171,7 +171,8 @@ export default function WorkOrdersGrid({
                     if (!confirm('Delete this work order?')) return;
                     try {
                       await api(`work-orders/${id}`, { method: 'DELETE' });
-                      const params = new URLSearchParams(searchParams.toString());
+                      const base = searchParams ? searchParams.toString() : '';
+                      const params = new URLSearchParams(base);
                       router.replace(`${pathname}?${params.toString()}`);
                     } catch (e) {
                       alert('Delete failed');

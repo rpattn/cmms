@@ -34,7 +34,8 @@ export default function SearchBox({
       onSearch(value);
       return;
     }
-    const params = new URLSearchParams(searchParams.toString());
+    const base = searchParams ? searchParams.toString() : '';
+    const params = new URLSearchParams(base);
     if (value) params.set('q', value);
     else params.delete('q');
     params.set('page', '0');

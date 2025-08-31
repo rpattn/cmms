@@ -53,7 +53,8 @@ export default function EntityGrid<T extends EntityRow>({
       onChangePagination(model);
       return;
     }
-    const params = new URLSearchParams(searchParams.toString());
+    const base = searchParams ? searchParams.toString() : '';
+    const params = new URLSearchParams(base);
     params.set('page', String(model.page));
     params.set('size', String(model.pageSize));
     if (q) params.set('q', String(q));
@@ -66,7 +67,8 @@ export default function EntityGrid<T extends EntityRow>({
       onChangeSort(model);
       return;
     }
-    const params = new URLSearchParams(searchParams.toString());
+    const base = searchParams ? searchParams.toString() : '';
+    const params = new URLSearchParams(base);
     if (model.length) params.set('sort', `${model[0].field},${model[0].sort || 'asc'}`);
     else params.delete('sort');
     router.push(`${pathname}?${params.toString()}`);
@@ -127,4 +129,3 @@ export default function EntityGrid<T extends EntityRow>({
     </div>
   );
 }
-

@@ -101,14 +101,15 @@ export default function WorkOrdersFilters({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const current = (value || searchParams.get('priority') || 'ALL').toUpperCase();
+  const current = (value || (searchParams ? searchParams.get('priority') : null) || 'ALL').toUpperCase();
 
   const onChange = (v: string) => {
     if (onPriorityChange) {
       onPriorityChange(v);
       return;
     }
-    const params = new URLSearchParams(searchParams.toString());
+    const base = searchParams ? searchParams.toString() : '';
+    const params = new URLSearchParams(base);
     if (v === 'ALL') params.delete('priority');
     else params.set('priority', v);
     params.set('page', '0');
