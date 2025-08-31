@@ -53,8 +53,10 @@ export default function WorkOrdersClientPage({
   const [statuses, setStatuses] = useState<string[]>(['OPEN', 'IN_PROGRESS', 'ON_HOLD']);
   const [hideArchived, setHideArchived] = useState<boolean>(true);
   const [createOpen, setCreateOpen] = useState(false);
+  const [createInitialDueDate, setCreateInitialDueDate] = useState<Date | null>(null);
   const [detailsId, setDetailsId] = useState<number | null>(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -109,7 +111,18 @@ export default function WorkOrdersClientPage({
       filterFields
     };
     if (sortModel.length) {
-      crit.sortField = sortModel[0].field;
+      const mapping: Record<string, string> = {
+        id: 'id',
+        title: 'title',
+        priority: 'priority',
+        status: 'status',
+        dueDate: 'dueDate',
+        createdAt: 'createdAt',
+        updatedAt: 'updatedAt',
+        completedOn: 'completedOn'
+      };
+      const field = sortModel[0].field;
+      crit.sortField = mapping[field] || field;
       crit.direction = (sortModel[0].sort === 'desc' ? 'DESC' : 'ASC');
     }
     return crit;
@@ -130,7 +143,7 @@ export default function WorkOrdersClientPage({
     } finally {
       setLoading(false);
     }
-  }, [criteria]);
+  }, [criteria, refreshKey]);
 
   useEffect(() => {
     load();
@@ -196,7 +209,7 @@ export default function WorkOrdersClientPage({
         </Box>
       </Drawer>
       {tab === 'calendar' && (
-        <WorkOrdersCalendar />
+        <WorkOrdersCalendar onDateClick={(date) => { setCreateInitialDueDate(date); setCreateOpen(true); }} />
       )}
       {tab === 'list' && (
         <>
@@ -218,6 +231,7 @@ export default function WorkOrdersClientPage({
             loading={loading}
             onChangePagination={onChangePagination}
             onChangeSort={onChangeSort}
+            onAfterAction={() => setRefreshKey((k) => k + 1)}
             onOpenDetails={(id) => {
               const params = new URLSearchParams(searchParams.toString());
               params.set('wo', String(id));
@@ -238,6 +252,7 @@ export default function WorkOrdersClientPage({
           // call load via toggling deps by changing page to 0
           setPage(0);
         }}
+        initialDueDate={createInitialDueDate}
       />
 
       {editId != null && (
@@ -259,7 +274,7 @@ export default function WorkOrdersClientPage({
             const params = new URLSearchParams(searchParams.toString());
             params.delete('wo');
             router.push(`${pathname}?${params.toString()}`);
-          }} />
+          }} onChanged={() => setRefreshKey((k) => k + 1)} />
         )}
       </Drawer>
 

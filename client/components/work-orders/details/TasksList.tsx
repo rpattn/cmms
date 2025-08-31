@@ -14,7 +14,7 @@ type Task = {
   taskBase?: any;
 };
 
-export default function TasksList({ workOrderId }: { workOrderId: number }) {
+export default function TasksList({ workOrderId, onChanged }: { workOrderId: number; onChanged?: () => void }) {
   const [tasks, setTasks] = useState<Task[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [newTitle, setNewTitle] = useState('');
@@ -61,6 +61,7 @@ export default function TasksList({ workOrderId }: { workOrderId: number }) {
       setMeter(null);
       setOptionsCsv('');
       setVersion((v) => v + 1);
+      onChanged?.();
     } catch {
       alert('Failed to add task');
     }
@@ -69,6 +70,7 @@ export default function TasksList({ workOrderId }: { workOrderId: number }) {
     try {
       await api(`tasks/${task.id}`, { method: 'PATCH', body: JSON.stringify({ value: String(checked) }) });
       setVersion((v) => v + 1);
+      onChanged?.();
     } catch {
       alert('Failed to update task');
     }
@@ -78,6 +80,7 @@ export default function TasksList({ workOrderId }: { workOrderId: number }) {
     try {
       await api(`tasks/${task.id}`, { method: 'DELETE' });
       setVersion((v) => v + 1);
+      onChanged?.();
     } catch {
       alert('Failed to delete task');
     }

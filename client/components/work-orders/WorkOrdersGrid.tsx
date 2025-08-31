@@ -1,7 +1,7 @@
 "use client";
 
 import { DataGrid, GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
-import { Chip, IconButton, Menu, MenuItem } from '@mui/material';
+import { Chip, IconButton, Menu, MenuItem, TextField } from '@mui/material';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/components/providers/I18nProvider';
@@ -14,8 +14,13 @@ import { api } from '@/lib/api';
 export type WorkOrderRow = {
   id: number;
   title?: string;
+  description?: string;
   priority?: string;
+  status?: string;
   dueDate?: string;
+  createdAt?: string;
+  updatedAt?: string;
+  completedOn?: string;
 };
 
 export default function WorkOrdersGrid({
@@ -28,7 +33,8 @@ export default function WorkOrdersGrid({
   onChangePagination,
   onChangeSort,
   onOpenDetails,
-  onEdit
+  onEdit,
+  onAfterAction
 }: {
   rows: WorkOrderRow[];
   page: number;
@@ -40,6 +46,7 @@ export default function WorkOrdersGrid({
   onChangeSort?: (model: GridSortModel) => void;
   onOpenDetails?: (id: number) => void;
   onEdit?: (id: number) => void;
+  onAfterAction?: () => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -61,22 +68,88 @@ export default function WorkOrdersGrid({
       { field: 'id', headerName: t('id_col'), width: 120 },
       { field: 'title', headerName: t('title_col'), flex: 1, minWidth: 200 },
       {
+        field: 'status',
+        headerName: t('status') as string,
+        width: 170,
+        renderCell: (params: any) => {
+          const id = params.row.id as number;
+          const [val, setVal] = useState<string>((params?.row?.status as string) || 'OPEN');
+          const color =
+            val === 'IN_PROGRESS' ? 'success' : val === 'ON_HOLD' ? 'warning' : val === 'COMPLETE' ? 'info' : 'default';
+          const onChange = async (newVal: string) => {
+            const prev = val;
+            setVal(newVal);
+            try {
+              await api(`work-orders/${id}/change-status`, { method: 'PATCH', body: JSON.stringify({ status: newVal }) });
+              onAfterAction?.();
+            } catch (e) {
+              console.error(e);
+              alert('Failed to update status');
+              setVal(prev);
+            }
+          };
+          return (
+            <TextField
+              select
+              size="small"
+              value={val}
+              onChange={(e) => onChange(e.target.value)}
+              sx={{ minWidth: 150 }}
+            >
+              {['OPEN','IN_PROGRESS','ON_HOLD','COMPLETE'].map((s) => (
+                <MenuItem key={s} value={s}>{s}</MenuItem>
+              ))}
+            </TextField>
+          );
+        }
+      },
+      {
         field: 'priority',
         headerName: t('priority_col'),
         width: 140,
-        renderCell: (params) => {
+        renderCell: (params: any) => {
           const v = (params.value as string) || 'NONE';
           const color = v === 'HIGH' ? 'error' : v === 'MEDIUM' ? 'warning' : v === 'LOW' ? 'success' : 'default';
           return <Chip label={v} color={color as any} size="small" />;
         }
       },
       {
+        field: 'description',
+        headerName: t('description') as string,
+        flex: 1,
+        minWidth: 220,
+        renderCell: (params: any) => (
+          <span>{params?.row?.description || ''}</span>
+        )
+      },
+      {
         field: 'dueDate',
         headerName: t('due_col'),
         width: 160,
-        valueFormatter: (params: any) => (params.value ? new Date(params.value as string).toLocaleDateString() : '')
+        renderCell: (params: any) => {
+          const v = params?.row?.dueDate as string | undefined;
+          return <span>{v ? new Date(v).toLocaleDateString() : ''}</span>;
+        }
       }
       ,
+      {
+        field: 'updatedAt',
+        headerName: t('updated_at') as string,
+        width: 170,
+        renderCell: (params: any) => {
+          const v = params?.row?.updatedAt as string | undefined;
+          return <span>{v ? new Date(v).toLocaleString() : ''}</span>;
+        }
+      },
+      {
+        field: 'createdAt',
+        headerName: t('created_at') as string,
+        width: 170,
+        renderCell: (params: any) => {
+          const v = params?.row?.createdAt as string | undefined;
+          return <span>{v ? new Date(v).toLocaleString() : ''}</span>;
+        }
+      },
       {
         field: 'actions',
         headerName: '',
@@ -204,6 +277,7 @@ export default function WorkOrdersGrid({
         onPaginationModelChange={onPaginationModelChange}
         onSortModelChange={onSortModelChange}
         paginationModel={{ page, pageSize }}
+        pageSizeOptions={[5, 10, 20, 50, 100]}
         disableColumnMenu
         disableRowSelectionOnClick
         onRowClick={onRowClick}

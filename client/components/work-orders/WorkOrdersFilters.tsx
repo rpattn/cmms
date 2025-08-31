@@ -67,7 +67,7 @@ export default function WorkOrdersFilters({
       <div>
         <div style={{ fontSize: 13, opacity: 0.7, marginBottom: 6 }}>{t('status') || 'Status'}</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(120px,1fr))' }}>
-          {['OPEN','IN_PROGRESS','ON_HOLD','CLOSED'].map((s) => (
+          {['OPEN','IN_PROGRESS','ON_HOLD','COMPLETE'].map((s) => (
             <FormControlLabel
               key={s}
               control={

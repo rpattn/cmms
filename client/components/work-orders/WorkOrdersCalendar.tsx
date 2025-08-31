@@ -27,7 +27,7 @@ type WorkOrderBase = {
   endDate?: string;
 };
 
-export default function WorkOrdersCalendar() {
+export default function WorkOrdersCalendar({ onDateClick }: { onDateClick?: (date: Date) => void }) {
   const { t, lang } = useI18n();
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -120,6 +120,9 @@ export default function WorkOrdersCalendar() {
           locales={[enGb, frLocale, esLocale]}
           locale={locale as any}
           height={660}
+          dateClick={(arg) => {
+            if (onDateClick) onDateClick(arg.date);
+          }}
           /**
            * Use promise style: return EventInput[] (or throw) instead of mixing callbacks with async.
            * Also: for identical ranges, return undefined (do nothing) so FC keeps its current events.
