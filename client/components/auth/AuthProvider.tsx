@@ -7,6 +7,12 @@ export type AuthUser = {
   email: string;
   name?: string;
   role?: { code?: string };
+  // optional fields from backend for profile image & account switching
+  avatar?: string;
+  profileImageUrl?: string;
+  picture?: string;
+  image?: { url?: string; path?: string; publicUrl?: string } | null;
+  parentSuperAccount?: { superUserId: number } | null;
 } | null;
 
 const AuthContext = createContext<AuthUser>(null);
@@ -20,4 +26,3 @@ export function useAuth() {
 }
 
 export default AuthContext;
-

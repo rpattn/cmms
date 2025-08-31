@@ -24,7 +24,7 @@ export function createGreyGooseTheme(dir: 'ltr' | 'rtl', overrides?: Partial<The
     colorSchemes: {
       light: {
         palette: {
-          background: { default: '#f7f9fc', paper: '#ffffff' },
+          background: { default: '#f7f9fc', paper: 'rgba(2,6,23,0.12)' },
           text: { primary: '#0f172a', secondary: '#334155' },
           divider: 'rgba(2,6,23,0.12)',
           action: {

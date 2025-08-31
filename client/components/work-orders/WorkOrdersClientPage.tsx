@@ -7,6 +7,7 @@
   import SearchBox from '@/components/common/SearchBox';
   import WorkOrdersFilters from '@/components/work-orders/WorkOrdersFilters';
   import { GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
+  import { useI18n } from '@/components/providers/I18nProvider';
 
   export default function WorkOrdersClientPage({
     initialPage = 0,
@@ -21,6 +22,7 @@
     initialSort?: string | null;
     initialPriority?: string | null;
   }) {
+    const { t } = useI18n();
     const [page, setPage] = useState<number>(initialPage);
     const [pageSize, setPageSize] = useState<number>(initialSize);
     const [q, setQ] = useState<string>(initialQ || '');
@@ -92,7 +94,7 @@
 
   return (
     <main>
-      <h1>Work Orders</h1>
+      <h1>{t('work_orders')}</h1>
       <SearchBox initial={initialQ} value={q} onSearch={(val) => { setPage(0); setQ(val); }} />
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
         <WorkOrdersFilters value={priority} onPriorityChange={(v) => { setPage(0); setPriority(v.toUpperCase()); }} />

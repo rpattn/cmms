@@ -2,6 +2,7 @@
 
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 export default function SearchBox({
   initial,
@@ -15,6 +16,7 @@ export default function SearchBox({
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { t } = useI18n();
   const [uncontrolledValue, setUncontrolledValue] = useState(initial || '');
 
   // If a controlled value is provided, mirror it into local input state
@@ -45,13 +47,13 @@ export default function SearchBox({
     <form onSubmit={onSubmit} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
       <input
         type="text"
-        placeholder="Search title..."
+        placeholder={t('search_title_placeholder')}
         value={uncontrolledValue}
         onChange={(e) => setUncontrolledValue(e.target.value)}
         style={{ padding: 8, width: 260 }}
       />
       <button type="submit" style={{ padding: '8px 12px' }}>
-        Search
+        {t('search')}
       </button>
     </form>
   );

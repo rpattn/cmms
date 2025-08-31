@@ -4,6 +4,7 @@ import { DataGrid, GridColDef, GridPaginationModel, GridSortModel } from '@mui/x
 import { Chip } from '@mui/material';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 export type WorkOrderRow = {
   id: number;
@@ -36,6 +37,7 @@ export default function WorkOrdersGrid({
   const searchParams = useSearchParams();
   const mountedRef = useRef(false);
   const [isMounted, setIsMounted] = useState(false);
+  const { t } = useI18n();
 
   useEffect(() => {
     mountedRef.current = true;
@@ -47,11 +49,11 @@ export default function WorkOrdersGrid({
 
   const columns: GridColDef[] = useMemo(
     () => [
-      { field: 'id', headerName: 'ID', width: 120 },
-      { field: 'title', headerName: 'Title', flex: 1, minWidth: 200 },
+      { field: 'id', headerName: t('id_col'), width: 120 },
+      { field: 'title', headerName: t('title_col'), flex: 1, minWidth: 200 },
       {
         field: 'priority',
-        headerName: 'Priority',
+        headerName: t('priority_col'),
         width: 140,
         renderCell: (params) => {
           const v = (params.value as string) || 'NONE';
@@ -61,12 +63,12 @@ export default function WorkOrdersGrid({
       },
       {
         field: 'dueDate',
-        headerName: 'Due',
+        headerName: t('due_col'),
         width: 160,
         valueFormatter: (params: any) => (params.value ? new Date(params.value as string).toLocaleDateString() : '')
       }
     ],
-    []
+    [t]
   );
 
   const onPaginationModelChange = useCallback((model: GridPaginationModel) => {
@@ -121,7 +123,7 @@ export default function WorkOrdersGrid({
               animation: 'wo-spin 0.8s linear infinite'
             }}
           />
-          <span style={{ color: 'var(--mui-palette-text-secondary)' }}>Loading…</span>
+          <span style={{ color: 'var(--mui-palette-text-secondary)' }}>{t('loading')}</span>
         </div>
         <style>{`@keyframes wo-spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
       </div>
