@@ -13,33 +13,42 @@ type Props = {
   search: (q: string) => Promise<RemoteOption[]>;
   size?: 'small' | 'medium';
   disabled?: boolean;
+  debounceMs?: number;
+  minChars?: number;
 };
 
-export default function MultiRemoteSearchSelect({ label, placeholder, value, onChange, search, size = 'small', disabled }: Props) {
+export default function MultiRemoteSearchSelect({ label, placeholder, value, onChange, search, size = 'small', disabled, debounceMs = 300, minChars = 0 }: Props) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState('');
   const [options, setOptions] = useState<RemoteOption[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<any>(null);
+  const requestSeq = useRef(0);
 
   useEffect(() => {
     if (!open) return;
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const res = await search(input.trim());
-        setOptions(res || []);
-      } catch {
+      const q = input.trim();
+      if (q.length < minChars) {
         setOptions([]);
-      } finally {
-        setLoading(false);
+        return;
       }
-    }, 300);
+      setLoading(true);
+      const seq = ++requestSeq.current;
+      try {
+        const res = await search(q);
+        if (seq === requestSeq.current) setOptions(res || []);
+      } catch {
+        if (seq === requestSeq.current) setOptions([]);
+      } finally {
+        if (seq === requestSeq.current) setLoading(false);
+      }
+    }, debounceMs);
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [open, input, search]);
+  }, [open, input, search, debounceMs, minChars]);
 
   return (
     <Autocomplete
@@ -74,4 +83,3 @@ export default function MultiRemoteSearchSelect({ label, placeholder, value, onC
     />
   );
 }
-

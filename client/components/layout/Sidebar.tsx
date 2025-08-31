@@ -3,6 +3,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, alpha, IconButton, Tooltip, Divider } from "@mui/material";
 import AssignmentTwoToneIcon from "@mui/icons-material/AssignmentTwoTone";
+import PrecisionManufacturingTwoToneIcon from "@mui/icons-material/PrecisionManufacturingTwoTone";
+import LocationOnTwoToneIcon from "@mui/icons-material/LocationOnTwoTone";
 import SettingsTwoToneIcon from "@mui/icons-material/SettingsTwoTone";
 import { useI18n } from "@/components/providers/I18nProvider";
 
@@ -15,6 +17,16 @@ export default function Sidebar({ inDrawer = false }: { inDrawer?: boolean }) {
       href: "/app/work-orders",
       icon: <AssignmentTwoToneIcon fontSize="small" />,
       // Mirrors the old /frontend link: '/app/work-orders'
+    },
+    {
+      label: t('assets'),
+      href: "/app/assets",
+      icon: <PrecisionManufacturingTwoToneIcon fontSize="small" />
+    },
+    {
+      label: t('locations'),
+      href: "/app/locations",
+      icon: <LocationOnTwoToneIcon fontSize="small" />
     }
   ];
   return (
@@ -34,7 +46,9 @@ export default function Sidebar({ inDrawer = false }: { inDrawer?: boolean }) {
         borderLeft: theme.direction === 'rtl' ? `1px solid ${theme.palette.divider}` : undefined,
       })}
    >
-      <Box sx={{ px: 2, py: 2, fontWeight: 600 }}>CMMS</Box>
+      <Box sx={{ px: 2, py: 2, fontWeight: 600 }}>
+        <Link href="/">CMMS</Link>
+      </Box>
       <List sx={{ py: 0, flex: 1 }}>
         {items.map((it) => {
           const active = pathname?.startsWith(it.href);

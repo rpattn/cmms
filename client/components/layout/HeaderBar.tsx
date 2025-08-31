@@ -1,16 +1,36 @@
 "use client";
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Box, IconButton, Drawer, useTheme } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import LanguagePicker from '@/components/common/LanguagePicker';
 import UserMenu from '@/components/layout/UserMenu';
 import Sidebar from '@/components/layout/Sidebar';
+import { usePathname } from 'next/navigation';
+import { useI18n } from '@/components/providers/I18nProvider';
 
 export default function HeaderBar() {
   const theme = useTheme();
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const { t } = useI18n();
+
+  const pageTitle = useMemo(() => {
+    const parts = (pathname || '').split('?')[0].split('/').filter(Boolean);
+    // Expect /app/<section>/...
+    const section = parts[1] || parts[0];
+    switch (section) {
+      case 'work-orders':
+        return t('work_orders') || 'Work Orders';
+      case 'assets':
+        return t('assets') || 'Assets';
+      case 'locations':
+        return t('locations') || 'Locations';
+      default:
+        return 'CMMS';
+    }
+  }, [pathname, t]);
 
   return (
     <>
@@ -21,7 +41,7 @@ export default function HeaderBar() {
               <MenuIcon />
             </IconButton>
           </Box>
-          <a href="/">CMMS</a>
+          <span>{pageTitle}</span>
         </Box>
         <nav style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           <LanguagePicker />

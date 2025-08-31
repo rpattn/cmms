@@ -3,6 +3,9 @@
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useI18n } from '@/components/providers/I18nProvider';
+import { Box, Button, IconButton, InputAdornment, TextField } from '@mui/material';
+import SearchTwoToneIcon from '@mui/icons-material/SearchTwoTone';
+import ClearTwoToneIcon from '@mui/icons-material/ClearTwoTone';
 
 export default function SearchBox({
   initial,
@@ -44,17 +47,31 @@ export default function SearchBox({
   };
 
   return (
-    <form onSubmit={onSubmit} style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-      <input
-        type="text"
-        placeholder={t('search_title_placeholder')}
+    <Box component="form" onSubmit={onSubmit} sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1.5 }}>
+      <TextField
+        size="small"
+        placeholder={t('search') || 'Search'}
         value={uncontrolledValue}
         onChange={(e) => setUncontrolledValue(e.target.value)}
-        style={{ padding: 8, width: 260 }}
+        sx={{ minWidth: 260, maxWidth: 420, flexShrink: 0 }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchTwoToneIcon fontSize="small" />
+            </InputAdornment>
+          ),
+          endAdornment: uncontrolledValue ? (
+            <InputAdornment position="end">
+              <IconButton size="small" aria-label="clear" onClick={() => setUncontrolledValue('')}>
+                <ClearTwoToneIcon fontSize="small" />
+              </IconButton>
+            </InputAdornment>
+          ) : undefined
+        }}
       />
-      <button type="submit" style={{ padding: '8px 12px' }}>
-        {t('search')}
-      </button>
-    </form>
+      <Button type="submit" variant="contained" size="small">
+        {t('search') || 'Search'}
+      </Button>
+    </Box>
   );
 }
