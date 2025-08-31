@@ -16,7 +16,7 @@ export default function MarketingHeader() {
           </Box>
           <Box sx={{ display: { xs: 'none', sm: 'flex' }, gap: 1 }}>
             <Button component={Link as any} href="/pricing" color="inherit">Pricing</Button>
-            <Button component={Link as any} href="/login" color="inherit">Login</Button>
+            <Button component={Link as any} href="/account/login" color="inherit">Login</Button>
             <Button component={Link as any} href="/account/register" variant="contained">Register</Button>
           </Box>
         </Toolbar>
