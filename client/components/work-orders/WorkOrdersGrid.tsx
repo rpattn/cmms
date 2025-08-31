@@ -1,10 +1,15 @@
 "use client";
 
 import { DataGrid, GridColDef, GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
-import { Chip } from '@mui/material';
+import { Chip, IconButton, Menu, MenuItem } from '@mui/material';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useMemo, useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '@/components/providers/I18nProvider';
+import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
+import EditTwoToneIcon from '@mui/icons-material/EditTwoTone';
+import DeleteTwoToneIcon from '@mui/icons-material/DeleteTwoTone';
+import OpenInNewTwoToneIcon from '@mui/icons-material/OpenInNewTwoTone';
+import { api } from '@/lib/api';
 
 export type WorkOrderRow = {
   id: number;
@@ -21,7 +26,9 @@ export default function WorkOrdersGrid({
   q,
   loading,
   onChangePagination,
-  onChangeSort
+  onChangeSort,
+  onOpenDetails,
+  onEdit
 }: {
   rows: WorkOrderRow[];
   page: number;
@@ -31,6 +38,8 @@ export default function WorkOrdersGrid({
   loading?: boolean;
   onChangePagination?: (model: GridPaginationModel) => void;
   onChangeSort?: (model: GridSortModel) => void;
+  onOpenDetails?: (id: number) => void;
+  onEdit?: (id: number) => void;
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -66,6 +75,48 @@ export default function WorkOrdersGrid({
         headerName: t('due_col'),
         width: 160,
         valueFormatter: (params: any) => (params.value ? new Date(params.value as string).toLocaleDateString() : '')
+      }
+      ,
+      {
+        field: 'actions',
+        headerName: '',
+        sortable: false,
+        filterable: false,
+        width: 70,
+        renderCell: (params) => {
+          const [anchor, setAnchor] = useState<null | HTMLElement>(null);
+          const open = Boolean(anchor);
+          const id = params.row.id as number;
+          return (
+            <>
+              <IconButton size="small" onClick={(e) => setAnchor(e.currentTarget)} aria-label="row actions">
+                <MoreVertTwoToneIcon fontSize="small" />
+              </IconButton>
+              <Menu anchorEl={anchor} open={open} onClose={() => setAnchor(null)}>
+                <MenuItem onClick={() => { setAnchor(null); router.push(`/app/work-orders/${id}`); }}>
+                  <OpenInNewTwoToneIcon fontSize="small" style={{ marginRight: 8 }} />
+                  View
+                </MenuItem>
+                <MenuItem onClick={() => { setAnchor(null); onEdit ? onEdit(id) : router.push(`/app/work-orders/${id}`); }}>
+                  <EditTwoToneIcon fontSize="small" style={{ marginRight: 8 }} />
+                  Edit
+                </MenuItem>
+                <MenuItem onClick={async () => {
+                  setAnchor(null);
+                  if (!confirm('Delete this work order?')) return;
+                  try { await api(`work-orders/${id}`, { method: 'DELETE' });
+                    // naive refresh by updating query param
+                    const params = new URLSearchParams(searchParams.toString());
+                    router.replace(`${pathname}?${params.toString()}`);
+                  } catch (e) { alert('Delete failed'); }
+                }}>
+                  <DeleteTwoToneIcon fontSize="small" style={{ marginRight: 8 }} />
+                  Delete
+                </MenuItem>
+              </Menu>
+            </>
+          );
+        }
       }
     ],
     [t]
@@ -103,7 +154,9 @@ export default function WorkOrdersGrid({
   }, [searchParams, pathname, router, onChangeSort]);
 
   const onRowClick = (params: any) => {
-    router.push(`/app/work-orders/${params.id}`);
+    const id = Number(params.id);
+    if (onOpenDetails) onOpenDetails(id);
+    else router.push(`/app/work-orders/${id}`);
   };
 
   // Avoid mounting DataGrid until after first client mount to

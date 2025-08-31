@@ -26,7 +26,7 @@ export default function Preferences() {
       const l = localStorage.getItem('appLang');
       const d = localStorage.getItem('appDateFormat') as 'MMDDYY' | 'DDMMYY' | null;
       const c = localStorage.getItem('appDensity');
-      if (l) setLang(l);
+      if (l) setLang(l as any);
       if (d === 'MMDDYY' || d === 'DDMMYY') setDateFormat(d);
       if (c) setCompact(c === 'compact');
     } catch {}
