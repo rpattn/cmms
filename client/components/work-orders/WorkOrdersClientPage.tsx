@@ -7,9 +7,7 @@ import WorkOrdersGrid, { WorkOrderRow } from '@/components/work-orders/WorkOrder
 import SearchBox from '@/components/common/SearchBox';
 import WorkOrdersFilters from '@/components/work-orders/WorkOrdersFilters';
 import { GridPaginationModel, GridSortModel } from '@mui/x-data-grid';
-import { Box, Button, Drawer, IconButton, Menu, MenuItem, Tab, Tabs, Tooltip } from '@mui/material';
-import FilterAltTwoToneIcon from '@mui/icons-material/FilterAltTwoTone';
-import MoreVertTwoToneIcon from '@mui/icons-material/MoreVertTwoTone';
+import { Box } from '@mui/material';
 import AddTwoToneIcon from '@mui/icons-material/AddTwoTone';
 import { useI18n } from '@/components/providers/I18nProvider';
 import CreateWorkOrderModal from '@/components/work-orders/CreateWorkOrderModal';
@@ -18,6 +16,10 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import EditWorkOrderModal from '@/components/work-orders/EditWorkOrderModal';
 import WorkOrdersCalendar from '@/components/work-orders/WorkOrdersCalendar';
 import { RemoteOption } from '@/components/common/RemoteSearchSelect';
+import useDetailsDrawer from '@/components/entity/useDetailsDrawer';
+import EntityDetailsDrawer from '@/components/entity/EntityDetailsDrawer';
+import EntityToolbar from '@/components/entity/EntityToolbar';
+import EntityFiltersDrawer from '@/components/entity/EntityFiltersDrawer';
 
 export default function WorkOrdersClientPage({
   initialPage = 0,
@@ -49,14 +51,11 @@ export default function WorkOrdersClientPage({
 
   const [tab, setTab] = useState<'list' | 'calendar'>('list');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
-  const menuOpen = Boolean(menuAnchor);
   const [statuses, setStatuses] = useState<string[]>(['OPEN', 'IN_PROGRESS', 'ON_HOLD']);
   const [hideArchived, setHideArchived] = useState<boolean>(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [createInitialDueDate, setCreateInitialDueDate] = useState<Date | null>(null);
-  const [detailsId, setDetailsId] = useState<number | null>(null);
-  const [detailsOpen, setDetailsOpen] = useState(false);
+  const details = useDetailsDrawer('wo');
   const [refreshKey, setRefreshKey] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
@@ -82,19 +81,7 @@ export default function WorkOrdersClientPage({
   const [completedFrom, setCompletedFrom] = useState<string | null>(null);
   const [completedTo, setCompletedTo] = useState<string | null>(null);
 
-  // Open details drawer if URL contains ?wo=ID
-  useEffect(() => {
-    const idStr = searchParams.get('wo');
-    const idNum = idStr ? Number(idStr) : NaN;
-    if (!isNaN(idNum) && idNum > 0) {
-      setDetailsId(idNum);
-      setDetailsOpen(true);
-    } else {
-      if (detailsOpen) setDetailsOpen(false);
-      if (detailsId != null) setDetailsId(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams]);
+  // Details drawer is now controlled by URL param via hook
 
   const criteria: SearchCriteria = useMemo(() => {
     const filterFields = [] as SearchCriteria['filterFields'];
@@ -192,81 +179,73 @@ export default function WorkOrdersClientPage({
 
   return (
     <main>
-      <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-        <Tabs value={tab} onChange={(_e, v) => setTab(v)}>
-          <Tab label={t('list_view') || 'List'} value="list" />
-          <Tab label={t('calendar_view') || 'Calendar'} value="calendar" />
-        </Tabs>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          <Tooltip title={t('filters') || 'Filters'}>
-            <IconButton onClick={() => setFiltersOpen(true)} aria-label="filters">
-              <FilterAltTwoToneIcon />
-            </IconButton>
-          </Tooltip>
-          <IconButton onClick={(e) => setMenuAnchor(e.currentTarget)} aria-label="menu">
-            <MoreVertTwoToneIcon />
-          </IconButton>
-          <Menu anchorEl={menuAnchor} open={menuOpen} onClose={() => setMenuAnchor(null)}>
-            <MenuItem onClick={async () => {
-              setMenuAnchor(null);
-              try {
-                const res = await api<{ success: boolean; message: string }>('export/work-orders');
-                if (res?.message) window.open(res.message, '_blank');
-              } catch (e) {
-                console.error(e);
-                alert('Export failed');
-              }
-            }}>{t('export') || 'Export'}</MenuItem>
-          </Menu>
-          <Button variant="contained" startIcon={<AddTwoToneIcon />} onClick={() => setCreateOpen(true)}>
-            {t('add_work_order') || 'Add Work Order'}
-          </Button>
-        </Box>
-      </Box>
+      <EntityToolbar
+        tabs={{
+          value: tab,
+          onChange: (v) => setTab(v as 'list' | 'calendar'),
+          items: [
+            { value: 'list', label: t('list_view') || 'List' },
+            { value: 'calendar', label: t('calendar_view') || 'Calendar' }
+          ]
+        }}
+        onOpenFilters={() => setFiltersOpen(true)}
+        filterTooltip={t('filters') || 'Filters'}
+        menuItems={[{
+          key: 'export',
+          label: t('export') || 'Export',
+          onClick: async () => {
+            try {
+              const res = await api<{ success: boolean; message: string }>('export/work-orders');
+              if (res?.message) window.open(res.message, '_blank');
+            } catch (e) {
+              console.error(e);
+              alert('Export failed');
+            }
+          }
+        }]}
+        primaryButton={{ label: t('add_work_order') || 'Add Work Order', onClick: () => setCreateOpen(true), startIcon: <AddTwoToneIcon /> }}
+      />
       <SearchBox initial={initialQ} value={q} onSearch={(val) => { setPage(0); setQ(val); }} />
-      <Drawer open={filtersOpen} onClose={() => setFiltersOpen(false)} anchor="right" PaperProps={{ sx: { width: 360 } }}>
-        <Box sx={{ p: 2 }}>
-          <h3 style={{ marginTop: 0 }}>{t('filters') || 'Filters'}</h3>
-          <WorkOrdersFilters
-            value={priority}
-            onPriorityChange={(v) => { setPage(0); setPriority(v.toUpperCase()); }}
-            statuses={statuses}
-            onStatusesChange={(vals) => { setPage(0); setStatuses(vals); }}
-            hideArchived={hideArchived}
-            onHideArchivedChange={(val) => { setPage(0); setHideArchived(val); }}
-            dueFrom={dueFrom}
-            dueTo={dueTo}
-            onDueFromChange={(v) => { setPage(0); setDueFrom(v); }}
-            onDueToChange={(v) => { setPage(0); setDueTo(v); }}
-            typeValue={typeValue}
-            onTypeChange={(v) => { setPage(0); setTypeValue(v); }}
-            assets={assets}
-            onAssetsChange={(vals) => { setPage(0); setAssets(vals); }}
-            locations={locations}
-            onLocationsChange={(vals) => { setPage(0); setLocations(vals); }}
-            teams={teams}
-            onTeamsChange={(vals) => { setPage(0); setTeams(vals); }}
-            primaryUsers={primaryUsers}
-            onPrimaryUsersChange={(vals) => { setPage(0); setPrimaryUsers(vals); }}
-            assignedTo={assignedToUsers}
-            onAssignedToChange={(vals) => { setPage(0); setAssignedToUsers(vals); }}
-            customers={customers}
-            onCustomersChange={(vals) => { setPage(0); setCustomers(vals); }}
-            createdFrom={createdFrom}
-            createdTo={createdTo}
-            onCreatedFromChange={(v) => { setPage(0); setCreatedFrom(v); }}
-            onCreatedToChange={(v) => { setPage(0); setCreatedTo(v); }}
-            updatedFrom={updatedFrom}
-            updatedTo={updatedTo}
-            onUpdatedFromChange={(v) => { setPage(0); setUpdatedFrom(v); }}
-            onUpdatedToChange={(v) => { setPage(0); setUpdatedTo(v); }}
-            completedFrom={completedFrom}
-            completedTo={completedTo}
-            onCompletedFromChange={(v) => { setPage(0); setCompletedFrom(v); }}
-            onCompletedToChange={(v) => { setPage(0); setCompletedTo(v); }}
-          />
-        </Box>
-      </Drawer>
+      <EntityFiltersDrawer open={filtersOpen} onClose={() => setFiltersOpen(false)} title={t('filters') || 'Filters'}>
+        <WorkOrdersFilters
+          value={priority}
+          onPriorityChange={(v) => { setPage(0); setPriority(v.toUpperCase()); }}
+          statuses={statuses}
+          onStatusesChange={(vals) => { setPage(0); setStatuses(vals); }}
+          hideArchived={hideArchived}
+          onHideArchivedChange={(val) => { setPage(0); setHideArchived(val); }}
+          dueFrom={dueFrom}
+          dueTo={dueTo}
+          onDueFromChange={(v) => { setPage(0); setDueFrom(v); }}
+          onDueToChange={(v) => { setPage(0); setDueTo(v); }}
+          typeValue={typeValue}
+          onTypeChange={(v) => { setPage(0); setTypeValue(v); }}
+          assets={assets}
+          onAssetsChange={(vals) => { setPage(0); setAssets(vals); }}
+          locations={locations}
+          onLocationsChange={(vals) => { setPage(0); setLocations(vals); }}
+          teams={teams}
+          onTeamsChange={(vals) => { setPage(0); setTeams(vals); }}
+          primaryUsers={primaryUsers}
+          onPrimaryUsersChange={(vals) => { setPage(0); setPrimaryUsers(vals); }}
+          assignedTo={assignedToUsers}
+          onAssignedToChange={(vals) => { setPage(0); setAssignedToUsers(vals); }}
+          customers={customers}
+          onCustomersChange={(vals) => { setPage(0); setCustomers(vals); }}
+          createdFrom={createdFrom}
+          createdTo={createdTo}
+          onCreatedFromChange={(v) => { setPage(0); setCreatedFrom(v); }}
+          onCreatedToChange={(v) => { setPage(0); setCreatedTo(v); }}
+          updatedFrom={updatedFrom}
+          updatedTo={updatedTo}
+          onUpdatedFromChange={(v) => { setPage(0); setUpdatedFrom(v); }}
+          onUpdatedToChange={(v) => { setPage(0); setUpdatedTo(v); }}
+          completedFrom={completedFrom}
+          completedTo={completedTo}
+          onCompletedFromChange={(v) => { setPage(0); setCompletedFrom(v); }}
+          onCompletedToChange={(v) => { setPage(0); setCompletedTo(v); }}
+        />
+      </EntityFiltersDrawer>
       {tab === 'calendar' && (
         <WorkOrdersCalendar onDateClick={(date) => { setCreateInitialDueDate(date); setCreateOpen(true); }} />
       )}
@@ -291,11 +270,7 @@ export default function WorkOrdersClientPage({
             onChangePagination={onChangePagination}
             onChangeSort={onChangeSort}
             onAfterAction={() => setRefreshKey((k) => k + 1)}
-            onOpenDetails={(id) => {
-              const params = new URLSearchParams(searchParams.toString());
-              params.set('wo', String(id));
-              router.push(`${pathname}?${params.toString()}`);
-            }}
+            onOpenDetails={(id) => details.openById(id)}
             onEdit={(id) => { setEditId(id); setEditOpen(true); }}
           />
         </div>
@@ -318,24 +293,11 @@ export default function WorkOrdersClientPage({
         <EditWorkOrderModal id={editId} open={editOpen} onClose={() => setEditOpen(false)} onSaved={() => { setEditOpen(false); setPage(0); }} />
       )}
 
-      <Drawer
-        open={detailsOpen}
-        onClose={() => {
-          const params = new URLSearchParams(searchParams.toString());
-          params.delete('wo');
-          router.push(`${pathname}?${params.toString()}`);
-        }}
-        anchor="right"
-        PaperProps={{ sx: { width: 460, maxWidth: '100vw' } }}
-      >
-        {detailsId != null && (
-          <WorkOrderDetailsPanel id={detailsId} onClose={() => {
-            const params = new URLSearchParams(searchParams.toString());
-            params.delete('wo');
-            router.push(`${pathname}?${params.toString()}`);
-          }} onChanged={() => setRefreshKey((k) => k + 1)} />
+      <EntityDetailsDrawer open={details.open} onClose={details.close}>
+        {details.id != null && (
+          <WorkOrderDetailsPanel id={Number(details.id)} onClose={details.close} onChanged={() => setRefreshKey((k) => k + 1)} />
         )}
-      </Drawer>
+      </EntityDetailsDrawer>
 
     </main>
   );
