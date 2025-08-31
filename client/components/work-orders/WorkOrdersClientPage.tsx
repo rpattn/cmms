@@ -16,6 +16,7 @@ import CreateWorkOrderModal from '@/components/work-orders/CreateWorkOrderModal'
 import WorkOrderDetailsPanel from '@/components/work-orders/WorkOrderDetailsPanel';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import EditWorkOrderModal from '@/components/work-orders/EditWorkOrderModal';
+import WorkOrdersCalendar from '@/components/work-orders/WorkOrdersCalendar';
 
 export default function WorkOrdersClientPage({
   initialPage = 0,
@@ -195,7 +196,7 @@ export default function WorkOrdersClientPage({
         </Box>
       </Drawer>
       {tab === 'calendar' && (
-        <div style={{ padding: 24, opacity: 0.7 }}>{t('calendar_view')} – Coming soon</div>
+        <WorkOrdersCalendar />
       )}
       {tab === 'list' && (
         <>
